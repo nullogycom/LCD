@@ -1,6 +1,6 @@
 {
 	"name": "lucida",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "A modular downloader tool",
 	"main": "build/index.js",
 	"type": "module",
@@ -19,6 +19,10 @@
 	],
 	"keywords": [],
 	"author": "hazycora",
+	"repository": {
+		"type": "git",
+		"url": "https://git.gay/h/lucida"
+	},
 	"license": "AGPL",
 	"dependencies": {
 		"dotenv": "^16.1.4",
