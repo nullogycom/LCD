@@ -10,6 +10,7 @@ Lucida is made to use few NodeJS dependencies and no system dependencies (...bes
 import Lucida from 'lucida'
 import Tidal from 'lucida/streamers/tidal/main.js'
 import Qobuz from 'lucida/streamers/qobuz/main.js'
+import Spotify from 'lucida/streamers/spotify/main.js'
 
 const lucida = new Lucida({
 	modules: {
@@ -18,6 +19,9 @@ const lucida = new Lucida({
 		}),
 		qobuz: new Qobuz({
 			// tokens
+		}),
+		spotify: new Spotify({
+			// options
 		})
 		// Any other modules
 	},
@@ -25,13 +29,23 @@ const lucida = new Lucida({
 		qobuz: {
 			username: '',
 			password: ''
+		},
+		spotify: {
+			username: '',
+			password: ''
 		}
 	}
 })
 
+// only needed if using modules which use the logins configuration rather than tokens
+await lucida.login()
+
 const track = await lucida.getByUrl('https://tidal.com/browse/track/255207223')
 
 await fs.promises.writeFile('test.flac', (await track.getStream()).stream)
+
+// only needed for modules which create persistent connections (of the built-in modules, this is just Spotify)
+await lucida.disconnect()
 ```
 
 For using a specific module, you can just use the functions built into the `Streamer` interface.

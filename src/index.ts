@@ -25,7 +25,7 @@ class Lucida {
 		if (!this.logins) throw new Error('No logins specified')
 		for (const i in this.logins) {
 			const credentials = this.logins[i]
-			await this.modules[i].login?.(credentials.username, credentials.password)
+			await this.modules[i]?.login?.(credentials.username, credentials.password)
 		}
 	}
 	async search(query: string, limit: number): Promise<{ [key: string]: SearchResults }> {
@@ -52,6 +52,13 @@ class Lucida {
 			return this.modules[i].getByUrl(url)
 		}
 		throw new Error(`Couldn't find module for hostname ${urlObj.hostname}`)
+	}
+	disconnect() {
+		return Promise.all(
+			Object.values(this.modules).map((e) => {
+				return e.disconnect?.()
+			})
+		)
 	}
 }
 

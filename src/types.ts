@@ -86,6 +86,7 @@ export interface Streamer {
 	search(query: string, limit: number): Promise<SearchResults>
 	getTypeFromUrl(url: string): ItemType
 	getByUrl(url: string): Promise<GetByUrlResponse>
+	disconnect?(): Promise<void>
 }
 
 export interface StreamerWithLogin extends Streamer {
