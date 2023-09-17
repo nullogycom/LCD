@@ -1,6 +1,6 @@
 {
 	"name": "lucida",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"description": "A modular downloader tool",
 	"main": "build/index.js",
 	"type": "module",
@@ -12,6 +12,10 @@
 	},
 	"exports": {
 		".": "./build/index.js",
+		"./types": {
+			"import": "./build/types.js",
+			"types": "./build/types.d.ts"
+		},
 		"./streamers/*.js": "./build/streamers/*.js"
 	},
 	"files": [

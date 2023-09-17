@@ -1,6 +1,6 @@
 import { Artist, Album, Track } from '../../types.js'
 import fetch from 'node-fetch'
-import sizeOf from 'image-size'
+import { imageSize as sizeOf } from 'image-size'
 
 async function parseCoverArtwork(url: string) {
 	const resp = await fetch(url)

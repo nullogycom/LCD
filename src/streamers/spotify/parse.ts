@@ -1,10 +1,5 @@
-import type {
-	SpotifyAlbum,
-	SpotifyArtist,
-	SpotifyThumbnail,
-	SpotifyTrack
-} from 'librespot/build/utils/types'
-import { Album, Artist, Track } from '../../types'
+import type { SpotifyAlbum, SpotifyArtist, SpotifyThumbnail, SpotifyTrack } from 'librespot/types'
+import { Album, Artist, Track } from '../../types.js'
 
 function parseThumbnails(raw: SpotifyThumbnail[]) {
 	return raw
