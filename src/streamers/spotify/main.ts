@@ -1,7 +1,6 @@
 import Librespot, { LibrespotOptions } from 'librespot'
 import { parseArtist, parseAlbum, parseTrack } from './parse.js'
 import { GetByUrlResponse, SearchResults, StreamerWithLogin } from '../../types.js'
-import { SpotifyAlbum, SpotifyArtist } from 'librespot/types'
 
 class Spotify implements StreamerWithLogin {
 	client: Librespot
@@ -25,46 +24,51 @@ class Spotify implements StreamerWithLogin {
 	getTypeFromUrl(url: string) {
 		return this.#getUrlParts(url)[0]
 	}
-	async getByUrl(url: string): Promise<GetByUrlResponse> {
+	async getByUrl(url: string, limit = 0): Promise<GetByUrlResponse> {
 		const [type, id] = this.#getUrlParts(url)
-		if (type == 'track') {
-			const metadata = await this.client.get.trackMetadata(id)
-			return {
-				type,
-				getStream: async () => {
-					const streamData = await this.client.get.trackStream(id)
-					return {
-						mimeType: 'audio/ogg',
-						sizeBytes: streamData.sizeBytes,
-						stream: streamData.stream
-					}
-				},
-				metadata: parseTrack(metadata)
-			}
-		}
-		const data = await this.client.get.byUrl(url)
-		let metadata
 		switch (type) {
-			case 'artist':
-				metadata = parseArtist(<SpotifyArtist>data)
+			case 'track': {
+				const metadata = await this.client.get.trackMetadata(id)
 				return {
 					type,
-					metadata
+					getStream: async () => {
+						const streamData = await this.client.get.trackStream(id)
+						return {
+							mimeType: 'audio/ogg',
+							sizeBytes: streamData.sizeBytes,
+							stream: streamData.stream
+						}
+					},
+					metadata: parseTrack(metadata)
 				}
-			case 'album':
-				metadata = parseAlbum(<SpotifyAlbum>data)
-				if ((<SpotifyAlbum>data).tracks) {
+			}
+			case 'artist': {
+				const metadata = await this.client.get.artistMetadata(id)
+				const albums = await this.client.get.artistAlbums(id, limit)
+				return {
+					type,
+					metadata: {
+						...parseArtist(metadata),
+						albums: albums.map((e) => parseAlbum(e))
+					}
+				}
+			}
+			case 'album': {
+				const metadata = await this.client.get.albumMetadata(id)
+				const tracks = await this.client.get.albumTracks(id)
+				if (tracks) {
 					return {
 						type,
-						metadata,
-						tracks: (<SpotifyAlbum>data).tracks?.map((e) => parseTrack(e)) ?? []
+						metadata: parseAlbum(metadata),
+						tracks: tracks?.map((e) => parseTrack(e)) ?? []
 					}
 				}
 				return {
 					type,
-					metadata,
+					metadata: parseAlbum(metadata),
 					tracks: []
 				}
+			}
 		}
 	}
 	async search(query: string): Promise<SearchResults> {
