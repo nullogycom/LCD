@@ -169,7 +169,7 @@ export default class Soundcloud implements Streamer {
 				}
 
 				for (const i in data.tracks) {
-					let track = data.tracks[i]
+					const track = data.tracks[i]
 
 					const parsedTrack = {
 						id: track.id,
