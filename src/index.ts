@@ -1,7 +1,7 @@
-import { GetByUrlResponse, SearchResults, StreamerWithLogin } from './types.js'
+import { GetByUrlResponse, SearchResults, Streamer, StreamerWithLogin } from './types.js'
 
 interface LucidaOptions {
-	modules: { [key: string]: StreamerWithLogin }
+	modules: { [key: string]: Streamer | StreamerWithLogin }
 	logins?: {
 		[key: string]: {
 			username: string
@@ -11,7 +11,7 @@ interface LucidaOptions {
 }
 
 class Lucida {
-	modules: { [key: string]: StreamerWithLogin }
+	modules: { [key: string]: Streamer | StreamerWithLogin }
 	hostnames: string[]
 	logins?: { [key: string]: { username: string; password: string } }
 	constructor(options: LucidaOptions) {
@@ -25,7 +25,10 @@ class Lucida {
 		if (!this.logins) throw new Error('No logins specified')
 		for (const i in this.logins) {
 			const credentials = this.logins[i]
-			await this.modules[i]?.login?.(credentials.username, credentials.password)
+			const module = this.modules[i]
+			if ('login' in module) {
+				await module.login?.(credentials.username, credentials.password)
+			}
 		}
 	}
 	async search(query: string, limit: number): Promise<{ [key: string]: SearchResults }> {
