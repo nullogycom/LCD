@@ -84,8 +84,10 @@ export interface AlbumGetByUrlResponse {
 export interface Streamer {
 	hostnames: string[]
 	search(query: string, limit: number): Promise<SearchResults>
-	getTypeFromUrl: ((url: string) => ItemType) | ((url: string, limit?: number) => ItemType)
-	getByUrl(url: string): Promise<GetByUrlResponse>
+	getTypeFromUrl(url: string): ItemType
+	getByUrl:
+		| ((url: string) => Promise<GetByUrlResponse>)
+		| ((url: string, limit?: number) => Promise<GetByUrlResponse>)
 	disconnect?(): Promise<void>
 }
 

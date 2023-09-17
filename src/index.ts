@@ -47,12 +47,12 @@ class Lucida {
 		}
 		throw new Error(`Couldn't find module for hostname ${urlObj.hostname}`)
 	}
-	getByUrl(url: string): Promise<GetByUrlResponse> {
+	getByUrl(url: string, limit?: number): Promise<GetByUrlResponse> {
 		const urlObj = new URL(url)
 		for (const i in this.modules) {
 			const matches = this.modules[i].hostnames.includes(urlObj.hostname)
 			if (!matches) continue
-			return this.modules[i].getByUrl(url)
+			return this.modules[i].getByUrl(url, limit)
 		}
 		throw new Error(`Couldn't find module for hostname ${urlObj.hostname}`)
 	}
