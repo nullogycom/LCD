@@ -1,4 +1,4 @@
-import Librespot from 'librespot'
+import Librespot, { LibrespotOptions } from 'librespot'
 import { parseArtist, parseAlbum, parseTrack } from './parse.js'
 import { GetByUrlResponse, SearchResults, StreamerWithLogin } from '../../types.js'
 import { SpotifyAlbum, SpotifyArtist } from 'librespot/types'
@@ -6,7 +6,7 @@ import { SpotifyAlbum, SpotifyArtist } from 'librespot/types'
 class Spotify implements StreamerWithLogin {
 	client: Librespot
 	hostnames = ['open.spotify.com']
-	constructor(options: never) {
+	constructor(options: LibrespotOptions) {
 		this.client = new Librespot(options)
 	}
 	login(username: string, password: string) {

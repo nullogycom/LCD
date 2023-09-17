@@ -12,8 +12,8 @@ dependencies:
     specifier: ^1.0.2
     version: 1.0.2
   librespot:
-    specifier: ^0.1.3
-    version: 0.1.3
+    specifier: ^0.1.4
+    version: 0.1.4
   node-fetch:
     specifier: ^3.3.1
     version: 3.3.1
@@ -815,8 +815,8 @@ packages:
       type-check: 0.4.0
     dev: true
 
-  /librespot@0.1.3:
-    resolution: {integrity: sha512-G9AGVUunh6zK8tTJE1kwod4gYge2nFJw8yyhCWBzK36HkZBXiHLMEKU1Yq8ANmXMPPPV7ffUFNOJFzJWqWFMwA==}
+  /librespot@0.1.4:
+    resolution: {integrity: sha512-Rxa5Ugr626pII81in7JZxzIudE3MY4IVLFw0kyVw/nN7CmHfLP2NhBFQrUdy8JXZNn9S+jMQOtOzJhG+c6zFxw==}
     dependencies:
       fast-xml-parser: 4.2.7
       node-fetch: 2.7.0
