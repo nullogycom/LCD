@@ -1,0 +1,191 @@
+import { Album, Artist, Track } from '../../types.js'
+import { DOMParser } from 'xmldom-qsa'
+
+export interface RawArtist {
+	id: string
+	url?: string
+	name: string
+	picture?: string
+}
+
+export function parseArtist(raw: RawArtist): Artist {
+	const picturePath = raw.picture?.replace(/-/gm, '/')
+	const artist: Artist = {
+		id: raw.id,
+		url: raw.url ?? `https://www.tidal.com/artist/${raw.id}`,
+		name: raw.name
+	}
+	if (picturePath)
+		artist.pictures = [
+			`https://resources.tidal.com/images/${picturePath}/160x160.jpg`,
+			`https://resources.tidal.com/images/${picturePath}/320x320.jpg`,
+			`https://resources.tidal.com/images/${picturePath}/750x750.jpg`
+		]
+	return artist
+}
+
+export interface RawAlbum {
+	cover: string
+	id: number
+	url: string
+	numberOfTracks?: number
+	numberOfVolumes?: number
+	title: string
+	artists?: RawArtist[]
+	upc?: string
+	releaseDate?: string
+}
+
+export function parseAlbum(raw: RawAlbum): Album {
+	const coverPath = raw.cover.replace(/-/gm, '/')
+	const album: Album = {
+		id: raw.id,
+		url: raw.url ?? `https://tidal.com/browse/album/${raw.id}`,
+		title: raw.title,
+		coverArtwork: [
+			{
+				url: `https://resources.tidal.com/images/${coverPath}/160x160.jpg`,
+				width: 160,
+				height: 160
+			},
+			{
+				url: `https://resources.tidal.com/images/${coverPath}/320x320.jpg`,
+				width: 320,
+				height: 320
+			},
+			{
+				url: `https://resources.tidal.com/images/${coverPath}/1280x1280.jpg`,
+				width: 1280,
+				height: 1280
+			}
+		]
+	}
+	if (raw.upc) album.upc = raw.upc
+	if (raw.artists) album.artists = raw.artists.map(parseArtist)
+	if (raw.numberOfTracks) album.trackCount = raw.numberOfTracks
+	if (raw.numberOfVolumes) album.discCount = raw.numberOfVolumes
+	if (raw.releaseDate) album.releaseDate = new Date(raw.releaseDate)
+	return album
+}
+
+export interface RawTrack {
+	url: string
+	id: number
+	artists: RawArtist[]
+	duration: number
+	copyright: string
+	isrc?: string
+	producers?: string[]
+	composers?: string[]
+	lyricists?: string[]
+	explicit?: boolean
+	trackNumber?: number
+	volumeNumber?: number
+	title: string
+	album: RawAlbum
+}
+
+export function parseTrack(raw: RawTrack): Track {
+	const track: Track = {
+		url: raw.url,
+		id: raw.id,
+		title: raw.title,
+		durationMs: raw.duration * 1000,
+		artists: raw.artists.map(parseArtist),
+		album: parseAlbum(raw.album)
+	}
+	if (raw.producers) track.producers = raw.producers
+	if (raw.composers) track.composers = raw.composers
+	if (raw.lyricists) track.lyricists = raw.lyricists
+	if (raw.isrc) track.isrc = raw.isrc
+	if (raw.copyright) track.copyright = raw.copyright
+	if (raw.explicit) track.explicit = raw.explicit
+	if (raw.trackNumber) track.trackNumber = raw.trackNumber
+	if (raw.volumeNumber) track.discNumber = raw.volumeNumber
+	return track
+}
+
+export interface Contributor {
+	name: string
+	role: string
+}
+
+export interface ContributorsByType {
+	type: string
+	contributors: { name: string; id: number }[]
+}
+
+export function addCredits(raw: RawTrack, credits: Contributor[] | ContributorsByType[]): RawTrack {
+	if (credits.length > 0 && 'type' in credits[0]) {
+		credits = (<ContributorsByType[]>credits)
+			.map((group) => {
+				return group.contributors.map((contributor) => {
+					return {
+						name: contributor.name,
+						role: group.type
+					}
+				})
+			})
+			.flat()
+	}
+	for (const contributor of <Contributor[]>credits) {
+		switch (contributor.role) {
+			case 'Producer':
+				if (!raw.producers) raw.producers = []
+				raw.producers.push(contributor.name)
+				break
+			case 'Composer':
+				if (!raw.composers) raw.composers = []
+				raw.composers.push(contributor.name)
+				break
+			case 'Lyricist':
+				if (!raw.lyricists) raw.lyricists = []
+				raw.lyricists.push(contributor.name)
+				break
+			default:
+				break
+		}
+	}
+	return raw
+}
+
+export function parseMpd(mpdString: string): string[] {
+	const tracks: string[][] = []
+	const { documentElement: doc } = new DOMParser().parseFromString(mpdString, 'application/xml')
+	for (const adaptationSet of [...doc.querySelectorAll('AdaptationSet')]) {
+		const contentType = adaptationSet.getAttribute('contentType')
+		if (contentType != 'audio') throw new Error('Lucida only supports audio MPDs')
+		for (const rep of [...doc.querySelectorAll('Representation')]) {
+			let codec = rep.getAttribute('codecs')?.toLowerCase()
+			if (codec?.startsWith('mp4a')) codec = 'aac'
+			const segTemplate = rep.querySelector('SegmentTemplate')
+			if (!segTemplate) throw new Error('No SegmentTemplate found')
+			const initializationUrl = segTemplate.getAttribute('initialization')
+			if (!initializationUrl) throw new Error('No initialization url')
+			const mediaUrl = segTemplate.getAttribute('media')
+			if (!mediaUrl) throw new Error('No media url')
+			const trackUrls = []
+			const timeline = segTemplate.querySelector('SegmentTimeline')
+			if (timeline) {
+				const timeList = []
+				// let currentTime = 0
+				for (const s of [...timeline.querySelectorAll('S')]) {
+					if (s.getAttribute('t')) {
+						// currentTime = parseInt(<string>s.getAttribute('t'))
+					}
+					const r = parseInt(s.getAttribute('r') || '0') + 1
+					if (!s.getAttribute('d')) throw new Error('No d property on SegmentTimeline')
+					for (let i = 0; i < r; i++) {
+						timeList.push(0)
+						// currentTime += parseInt(<string>s.getAttribute('d'))
+					}
+				}
+				for (const i in timeList) {
+					trackUrls.push(mediaUrl.replace('$Number$', i))
+				}
+			}
+			tracks.push(trackUrls)
+		}
+	}
+	return tracks[0]
+}
