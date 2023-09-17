@@ -29,7 +29,6 @@
 	},
 	"license": "AGPL",
 	"dependencies": {
-		"dotenv": "^16.1.4",
 		"image-size": "^1.0.2",
 		"librespot": "^0.1.4",
 		"node-fetch": "^3.3.1",
