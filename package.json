@@ -1,7 +1,7 @@
 {
 	"name": "lucida",
 	"version": "1.0.0",
-	"description": "",
+	"description": "A modular downloader tool",
 	"main": "build/index.js",
 	"type": "module",
 	"types": "build/index.d.ts",
