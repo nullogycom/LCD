@@ -26,7 +26,7 @@ class Lucida {
 		for (const i in this.logins) {
 			const credentials = this.logins[i]
 			const module = this.modules[i]
-			if ('login' in module) {
+			if (module && 'login' in module) {
 				await module.login?.(credentials.username, credentials.password)
 			}
 		}
