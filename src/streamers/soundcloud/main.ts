@@ -1,4 +1,4 @@
-import fetch from 'node-fetch'
+import fetch, { HeadersInit } from 'node-fetch'
 import { DEFAULT_HEADERS, SC_VERSION } from './constants.js'
 import { Streamer, SearchResults, GetByUrlResponse, GetStreamResponse } from '../../types.js'
 import {
@@ -12,10 +12,14 @@ import {
 	ScClient
 } from './parse.js'
 
-function headers(token?: string): HeadersInit {
+function headers(oauthToken?: string | undefined): HeadersInit {
 	const headers: HeadersInit = DEFAULT_HEADERS
-	if (token) headers['Authentication'] = 'OAuth' + token
+	if (oauthToken) headers['Authorization'] = 'OAuth ' + oauthToken
 	return headers
+}
+
+interface SoundcloudOptions {
+	oauthToken?: string
 }
 
 interface SoundcloudTranscoding {
@@ -33,10 +37,11 @@ interface SoundcloudTranscoding {
 export default class Soundcloud implements Streamer {
 	hostnames = ['soundcloud.com', 'm.soundcloud.com', 'www.soundcloud.com']
 	oauthToken?: string
-	token?: string
+	constructor(options: SoundcloudOptions) {
+		this.oauthToken = options.oauthToken
+	}
 	async search(query: string, limit = 20): Promise<SearchResults> {
 		const client = await this.#getClient()
-		if (this.oauthToken) client.id = this.oauthToken
 
 		const response = await fetch(
 			this.#formatURL(
@@ -45,7 +50,7 @@ export default class Soundcloud implements Streamer {
 				)}&app_locale=en&limit=${limit}`,
 				client
 			),
-			{ method: 'get', headers: headers(this.token) }
+			{ method: 'get', headers: headers(this.oauthToken) }
 		)
 		if (!response.ok) {
 			const errMsg = await response.text()
@@ -80,7 +85,7 @@ export default class Soundcloud implements Streamer {
 		const response = await (
 			await fetch(`https://soundcloud.com/`, {
 				method: 'get',
-				headers: headers(this.token)
+				headers: headers()
 			})
 		).text()
 
@@ -123,10 +128,9 @@ export default class Soundcloud implements Streamer {
 
 		const type = this.getTypeFromUrl(url)
 		const client = await this.#getClient()
-		if (this.oauthToken) client.id = this.oauthToken
 
 		// getting the IDs and track authorization
-		const html = await (await fetch(url, { method: 'get', headers: headers(this.token) })).text()
+		const html = await (await fetch(url, { method: 'get', headers: headers() })).text()
 
 		switch (type) {
 			case 'track': {
@@ -135,13 +139,11 @@ export default class Soundcloud implements Streamer {
 					?.split(`"id":`)?.[1]
 					?.split(',')?.[0]
 
-				const trackAuthorization = html.split(`"track_authorization":"`)[1].split(`"`)[0]
-
 				const api = JSON.parse(
 					await (
 						await fetch(
 							this.#formatURL(`https://api-v2.soundcloud.com/tracks?ids=${trackId}`, client),
-							{ method: 'get', headers: headers(this.token) }
+							{ method: 'get', headers: headers(this.oauthToken) }
 						)
 					).text()
 				)[0]
@@ -149,7 +151,12 @@ export default class Soundcloud implements Streamer {
 				return {
 					type: 'track',
 					getStream: async () => {
-						return await getStream(api.media.transcodings, trackAuthorization, client)
+						return await getStream(
+							api.media.transcodings,
+							api.track_authorization,
+							client,
+							this.oauthToken
+						)
 					},
 					metadata: await parseTrack(api)
 				}
@@ -206,7 +213,7 @@ export default class Soundcloud implements Streamer {
 			await (
 				await fetch(this.#formatURL(`https://api-v2.soundcloud.com/tracks?ids=${id}`, client), {
 					method: 'get',
-					headers: headers(this.token)
+					headers: headers(this.oauthToken)
 				})
 			).text()
 		)[0]
@@ -239,14 +246,18 @@ async function fetchKey(response: string) {
 async function getStream(
 	transcodings: Array<SoundcloudTranscoding>,
 	trackAuth: string,
-	client: ScClient
+	client: ScClient,
+	oauthToken?: string | undefined
 ): Promise<GetStreamResponse> {
 	const progressive = transcodings.filter((x) => x.format?.protocol == 'progressive')[0]
 	const streamUrlResp = await fetch(
-		`${progressive.url}?client_id=${client.id}&track_authorization=${trackAuth}`
+		`${progressive.url}?client_id=${client.id}&track_authorization=${trackAuth}`,
+		{
+			headers: headers(oauthToken)
+		}
 	)
-	const { url } = <{ url: string }>await streamUrlResp.json()
-	const streamResp = await fetch(url)
+	const json = <{ url: string }>await streamUrlResp.json()
+	const streamResp = await fetch(json.url)
 	return {
 		mimeType: progressive.format.mime_type,
 		sizeBytes: parseInt(<string>streamResp.headers.get('Content-Length')),
