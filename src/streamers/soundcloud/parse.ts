@@ -27,6 +27,11 @@ export interface RawArtist {
 	kind: 'user'
 }
 
+export interface Headers {
+	Authorization?: string
+	"User-Agent": string
+}
+
 export function parseArtist(raw: RawArtist): Artist {
 	const artist: Artist = {
 		id: raw.id,
