@@ -3,7 +3,7 @@ import fetch from 'node-fetch'
 import {
 	StreamerWithLogin,
 	SearchResults,
-	GetByUrlResponse,
+	ResolvedUrl,
 	GetStreamResponse,
 	Track
 } from '../../types.js'
@@ -213,7 +213,7 @@ export default class Qobuz implements StreamerWithLogin {
 	getTypeFromUrl(url: string): 'artist' | 'album' | 'track' {
 		return this.#getUrlParts(url)[0]
 	}
-	async getByUrl(url: string): Promise<GetByUrlResponse> {
+	async getByUrl(url: string): Promise<ResolvedUrl> {
 		const [type, id] = this.#getUrlParts(url)
 		switch (type) {
 			case 'track': {

@@ -61,21 +61,21 @@ export interface GetStreamResponse {
 }
 
 // got a better name for this?
-export type GetByUrlResponse =
-	| TrackGetByUrlResponse
-	| ArtistGetByUrlResponse
-	| AlbumGetByUrlResponse
+export type ResolvedUrl =
+	| ResolvedTrackUrl
+	| ResolvedArtistUrl
+	| ResolvedAlbumUrl
 
-export interface TrackGetByUrlResponse {
+export interface ResolvedTrackUrl {
 	type: 'track'
 	getStream(): Promise<GetStreamResponse>
 	metadata: Track
 }
-export interface ArtistGetByUrlResponse {
+export interface ResolvedArtistUrl {
 	type: 'artist'
 	metadata: Artist
 }
-export interface AlbumGetByUrlResponse {
+export interface ResolvedAlbumUrl {
 	type: 'album'
 	tracks: Track[]
 	metadata: Album
@@ -86,8 +86,8 @@ export interface Streamer {
 	search(query: string, limit: number): Promise<SearchResults>
 	getTypeFromUrl(url: string): ItemType
 	getByUrl:
-		| ((url: string) => Promise<GetByUrlResponse>)
-		| ((url: string, limit?: number) => Promise<GetByUrlResponse>)
+		| ((url: string) => Promise<ResolvedUrl>)
+		| ((url: string, limit?: number) => Promise<ResolvedUrl>)
 	disconnect?(): Promise<void>
 }
 

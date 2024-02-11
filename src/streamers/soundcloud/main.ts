@@ -1,6 +1,6 @@
 import fetch, { HeadersInit } from 'node-fetch'
 import { DEFAULT_HEADERS, SC_VERSION } from './constants.js'
-import { Streamer, SearchResults, GetByUrlResponse, GetStreamResponse } from '../../types.js'
+import { Streamer, SearchResults, ResolvedUrl, GetStreamResponse } from '../../types.js'
 import {
 	parseAlbum,
 	parseTrack,
@@ -107,7 +107,7 @@ export default class Soundcloud implements Streamer {
 		}
 	}
 
-	async getByUrl(url: string): Promise<GetByUrlResponse> {
+	async getByUrl(url: string): Promise<ResolvedUrl> {
 		return await this.#getMetadata(url)
 	}
 
@@ -123,7 +123,7 @@ export default class Soundcloud implements Streamer {
 		return url
 	}
 
-	async #getMetadata(url: string): Promise<GetByUrlResponse> {
+	async #getMetadata(url: string): Promise<ResolvedUrl> {
 		// loosely based off: https://github.com/wukko/cobalt/blob/92c0e1d7b7df262fcd82ea7f5cf8c58c6d2ad744/src/modules/processing/services/soundcloud.js
 
 		const type = this.getTypeFromUrl(url)
@@ -163,7 +163,7 @@ export default class Soundcloud implements Streamer {
 			}
 			case 'album': {
 				const data = JSON.parse(html.split(`"hydratable":"playlist","data":`)[1].split(`}];`)[0])
-				const parsed: GetByUrlResponse = {
+				const parsed: ResolvedUrl = {
 					type: 'album',
 					metadata: await parseAlbum(data),
 					tracks: await Promise.all(

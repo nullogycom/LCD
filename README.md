@@ -62,7 +62,7 @@ Default export is a class which implements the `Streamer` interface:
 interface Streamer {
 	hostnames: string[]
 	search(query: string, limit: number): Promise<SearchResults>
-	getByUrl(url: string): Promise<GetByUrlResponse>
+	getByUrl(url: string): Promise<ResolvedUrl>
 }
 ```
 

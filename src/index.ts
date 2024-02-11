@@ -1,4 +1,4 @@
-import { GetByUrlResponse, SearchResults, Streamer, StreamerWithLogin } from './types.js'
+import { ResolvedUrl, SearchResults, Streamer, StreamerWithLogin } from './types.js'
 
 interface LucidaOptions {
 	modules: { [key: string]: Streamer | StreamerWithLogin }
@@ -47,7 +47,7 @@ class Lucida {
 		}
 		throw new Error(`Couldn't find module for hostname ${urlObj.hostname}`)
 	}
-	getByUrl(url: string, limit?: number): Promise<GetByUrlResponse> {
+	getByUrl(url: string, limit?: number): Promise<ResolvedUrl> {
 		const urlObj = new URL(url)
 		for (const i in this.modules) {
 			const matches = this.modules[i].hostnames.includes(urlObj.hostname)

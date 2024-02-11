@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 import { spawn } from 'child_process'
-import { GetByUrlResponse, GetStreamResponse, SearchResults, Streamer, Track } from '../../types.js'
+import { ResolvedUrl, GetStreamResponse, SearchResults, Streamer, Track } from '../../types.js'
 import { TIDAL_AUTH_BASE, TIDAL_API_BASE } from './constants.js'
 import {
 	Contributor,
@@ -336,7 +336,7 @@ export default class Tidal implements Streamer {
 	getTypeFromUrl(url: string): 'artist' | 'album' | 'track' {
 		return this.#getUrlParts(url)[0]
 	}
-	async getByUrl(url: string): Promise<GetByUrlResponse> {
+	async getByUrl(url: string): Promise<ResolvedUrl> {
 		const [type, id] = this.#getUrlParts(url)
 		switch (type) {
 			case 'track':
