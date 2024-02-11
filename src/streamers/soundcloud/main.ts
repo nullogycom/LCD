@@ -14,7 +14,7 @@ import {
 
 function headers(oauthToken?: string | undefined): HeadersInit {
 	const headers: HeadersInit = DEFAULT_HEADERS
-	if (oauthToken) headers['Authorization'] = 'OAuth ' + oauthToken;
+	if (oauthToken) headers['Authorization'] = 'OAuth ' + oauthToken
 	return headers
 }
 
@@ -38,7 +38,7 @@ export default class Soundcloud implements Streamer {
 	hostnames = ['soundcloud.com', 'm.soundcloud.com', 'www.soundcloud.com']
 	oauthToken?: string
 	constructor(options: SoundcloudOptions) {
-		this.oauthToken = options.oauthToken;
+		this.oauthToken = options.oauthToken
 	}
 	async search(query: string, limit = 20): Promise<SearchResults> {
 		const client = await this.#getClient()
@@ -151,7 +151,12 @@ export default class Soundcloud implements Streamer {
 				return {
 					type: 'track',
 					getStream: async () => {
-						return await getStream(api.media.transcodings, api.track_authorization, client, this.oauthToken)
+						return await getStream(
+							api.media.transcodings,
+							api.track_authorization,
+							client,
+							this.oauthToken
+						)
 					},
 					metadata: await parseTrack(api)
 				}

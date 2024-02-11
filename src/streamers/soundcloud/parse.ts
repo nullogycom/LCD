@@ -29,7 +29,7 @@ export interface RawArtist {
 
 export interface Headers {
 	Authorization?: string
-	"User-Agent": string
+	'User-Agent': string
 }
 
 export function parseArtist(raw: RawArtist): Artist {
