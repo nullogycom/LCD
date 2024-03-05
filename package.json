@@ -5,6 +5,9 @@
 	"main": "build/index.js",
 	"type": "module",
 	"types": "build/index.d.ts",
+	"bin": {
+		"lucida": "build/index.js"
+	 },
 	"scripts": {
 		"tsc": "tsc",
 		"lint": "prettier --check . && eslint .",

@@ -2,6 +2,7 @@
 node_modules
 /build
 /package
+result
 .env
 .env.*
 !.env.example
