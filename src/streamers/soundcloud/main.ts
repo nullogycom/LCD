@@ -38,16 +38,21 @@ export default class Soundcloud implements Streamer {
 	hostnames = ['soundcloud.com', 'm.soundcloud.com', 'www.soundcloud.com']
 	oauthToken?: string
 	constructor(options: SoundcloudOptions) {
-		this.oauthToken = options.oauthToken
+		this.oauthToken = options?.oauthToken
 	}
 	async search(query: string, limit = 20): Promise<SearchResults> {
 		const client = await this.#getClient()
-
+		console.log(this.#formatURL(
+			`https://api-v2.soundcloud.com/search?q=${encodeURIComponent(
+				query
+			)}&offset=0&linked_partitioning=1&app_locale=en&limit=${limit}`,
+			client
+		), headers(this.oauthToken))
 		const response = await fetch(
 			this.#formatURL(
 				`https://api-v2.soundcloud.com/search?q=${encodeURIComponent(
 					query
-				)}&app_locale=en&limit=${limit}`,
+				)}&offset=0&linked_partitioning=1&app_locale=en&limit=${limit}`,
 				client
 			),
 			{ method: 'get', headers: headers(this.oauthToken) }
@@ -57,7 +62,8 @@ export default class Soundcloud implements Streamer {
 			try {
 				throw new Error(JSON.parse(errMsg))
 			} catch (error) {
-				throw new Error(errMsg);
+				if (errMsg) throw new Error(errMsg)
+				else throw new Error('Soundcloud request failed.')
 			}
 		}
 
