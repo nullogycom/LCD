@@ -9,4 +9,3 @@ node_modules
 !.env.example
 /test.js
 /tmp
-pnpm-lock.yaml
