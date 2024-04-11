@@ -51,8 +51,8 @@ export default class Tidal implements Streamer {
 			if (!this.refreshToken) return
 			if (await this.sessionValid()) return
 			const success = await this.refresh()
-			if (success) console.log(`Refreshed tokens successfully`)
-			else console.log(`Failed to refresh tokens, this could be a bad sign`)
+			if (success) console.log(`[tidal] Refreshed tokens successfully`)
+			else console.log(`[tidal] Failed to refresh tokens, this could be a bad sign`)
 		}
 		getReady()
 	}
@@ -86,15 +86,15 @@ export default class Tidal implements Streamer {
 				const sessionValid = await this.sessionValid()
 				if (json.status == 401 && !sessionValid) {
 					this.failedAuth = !(await this.refresh())
-					console.log('Refreshed tokens')
+					console.log('[tidal] Refreshed tokens')
 					if (this.failedAuth) {
 						throw new Error('Auth failed. Try getting new tokens.')
 					}
 					return this.#get(url, params)
 				}
-				console.error('Tidal error response:', json)
+				console.error('[tidal] Tidal error response:', json)
 			} catch (error) {
-				console.error('Tidal error response:', errMsg)
+				console.error('[tidal] Tidal error response:', errMsg)
 			}
 			throw new Error(`Fetching ${url} from Tidal failed with status code ${response.status}.`)
 		}
@@ -146,9 +146,9 @@ export default class Tidal implements Streamer {
 			this.refreshToken = loginData.refresh_token
 			this.expires = Date.now() + loginData.expires_in * 1000
 
-			console.log('Using the following new config:', this.getCurrentConfig())
+			console.log('[tidal] Using the following new config:', this.getCurrentConfig())
 		}
-		console.log(`Log in at ${linkUrl}`)
+		console.log(`[tidal] Log in at ${linkUrl}`)
 		checkToken()
 		return linkUrl
 	}

@@ -66,7 +66,7 @@ export async function parseAlbum(raw: RawAlbum): Promise<Album> {
 	}
 	if (raw.tracks?.[0]?.artwork_url != undefined) {
 		album.coverArtwork = [
-			await parseCoverArtwork(raw.tracks[0].artwork_url.replace('-large', '-original'))
+			await parseCoverArtwork(raw?.tracks?.[0]?.artwork_url)
 		]
 	}
 	return album
@@ -95,7 +95,7 @@ export async function parseTrack(raw: RawTrack): Promise<Track> {
 	}
 
 	if (raw?.artwork_url != undefined) {
-		track.coverArtwork = [await parseCoverArtwork(raw?.artwork_url?.replace('-large', '-original'))]
+		track.coverArtwork = [await parseCoverArtwork(raw?.artwork_url)]
 	}
 
 	return track
