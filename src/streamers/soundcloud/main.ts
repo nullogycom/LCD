@@ -55,11 +55,10 @@ export default class Soundcloud implements Streamer {
 		if (!response.ok) {
 			const errMsg = await response.text()
 			try {
-				console.error('Soundcloud error response:', JSON.parse(errMsg))
+				throw new Error(JSON.parse(errMsg))
 			} catch (error) {
-				console.error('Soundcloud error response:', errMsg)
+				throw new Error(errMsg);
 			}
-			throw new Error(`Searching Soundcloud failed with status code ${response.status}.`)
 		}
 
 		const resultResponse = <RawSearchResults>await response.json()
@@ -233,7 +232,8 @@ async function fetchKey(response: string) {
 		if (typeof streamKey == 'string') continue
 
 		const key = keys[i].split(`"`)[0]
-		if (!key.startsWith('https://a-v2.sndcdn.com/assets/50-')) continue
+		const keyregex = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/
+		if (!keyregex.test(key)) continue
 
 		const script = await (await fetch(key)).text()
 		if (script.split(`,client_id:"`).length > 1 && !streamKey) {
