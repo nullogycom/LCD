@@ -232,7 +232,8 @@ async function fetchKey(response: string) {
 		if (typeof streamKey == 'string') continue
 
 		const key = keys[i].split(`"`)[0]
-		const keyregex = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/
+		const keyregex =
+			/^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/
 		if (!keyregex.test(key)) continue
 
 		const script = await (await fetch(key)).text()
