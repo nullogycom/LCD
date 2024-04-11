@@ -234,7 +234,8 @@ export default class Tidal implements Streamer {
 			{
 				replace: 'true',
 				offset: 0,
-				includeContributors: 'true'
+				includeContributors: 'true',
+				limit: 100
 			}
 		)
 		return contributorResponse.items.map((item) => parseTrack(addCredits(item.item, item.credits)))
@@ -261,7 +262,7 @@ export default class Tidal implements Streamer {
 			manifestMimeType: string
 		}
 		const playbackInfoResponse = <PlaybackInfo>await this.#get(
-			`tracks/${trackId}/playbackinfopostpaywall`,
+			`tracks/${trackId}/playbackinfopostpaywall/v4`,
 			{
 				playbackmode: 'STREAM',
 				assetpresentation: 'FULL',

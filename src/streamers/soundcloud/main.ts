@@ -179,6 +179,7 @@ export default class Soundcloud implements Streamer {
 					const track = data.tracks[i]
 
 					const parsedTrack = {
+						type: 'track',
 						id: track.id,
 						title: track.title,
 						url: track.permalink_url,
