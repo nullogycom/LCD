@@ -42,12 +42,6 @@ export default class Soundcloud implements Streamer {
 	}
 	async search(query: string, limit = 20): Promise<SearchResults> {
 		const client = await this.#getClient()
-		console.log(this.#formatURL(
-			`https://api-v2.soundcloud.com/search?q=${encodeURIComponent(
-				query
-			)}&offset=0&linked_partitioning=1&app_locale=en&limit=${limit}`,
-			client
-		), headers(this.oauthToken))
 		const response = await fetch(
 			this.#formatURL(
 				`https://api-v2.soundcloud.com/search?q=${encodeURIComponent(
@@ -63,7 +57,7 @@ export default class Soundcloud implements Streamer {
 				throw new Error(JSON.parse(errMsg))
 			} catch (error) {
 				if (errMsg) throw new Error(errMsg)
-				else throw new Error('Soundcloud request failed.')
+				else throw new Error('Soundcloud request failed. Try removing the OAuth token, if added.')
 			}
 		}
 
