@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      blowfish-cbc:
+        specifier: ^1.0.1
+        version: 1.0.1
       image-size:
         specifier: ^1.1.1
         version: 1.1.1
@@ -224,6 +227,9 @@ packages:
 
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
+
+  blowfish-cbc@1.0.1:
+    resolution: {integrity: sha512-o1JN6g6+ATW/4k7q1BZzy14VqLxwYa1mCii47qT4kmAaYD0NAfdM6/pz6uizbhTra/xunsPQI27LZt08OQS4sA==}
 
   brace-expansion@1.1.11:
     resolution: {integrity: sha512-iCuPHDFgrHX7H2vEI/5xpz07zSHB00TpugqhmYtVmMO6518mCuRMoOYFldEBl0g187ufozdaHgWKcYFb61qGiA==}
@@ -502,6 +508,10 @@ packages:
 
   node-addon-api@1.7.2:
     resolution: {integrity: sha512-ibPK3iA+vaY1eEjESkQkM0BbCqFOaZMiXRTtdB0u7b4djtY6JnsjvPdUHVMg6xQt3B8fpTTWHI9A+ADjM9frzg==}
+
+  node-addon-api@8.1.0:
+    resolution: {integrity: sha512-yBY+qqWSv3dWKGODD6OGE6GnTX7Q2r+4+DfpqxHSHh8x0B4EKP9+wVGLS6U/AM1vxSNNmUEuIV5EGhYwPpfOwQ==}
+    engines: {node: ^18 || ^20 || >= 21}
 
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
@@ -879,6 +889,10 @@ snapshots:
 
   balanced-match@1.0.2: {}
 
+  blowfish-cbc@1.0.1:
+    dependencies:
+      node-addon-api: 8.1.0
+
   brace-expansion@1.1.11:
     dependencies:
       balanced-match: 1.0.2
@@ -1181,6 +1195,8 @@ snapshots:
   natural-compare@1.4.0: {}
 
   node-addon-api@1.7.2: {}
+
+  node-addon-api@8.1.0: {}
 
   node-domexception@1.0.0: {}
 
