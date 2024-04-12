@@ -65,9 +65,7 @@ export async function parseAlbum(raw: RawAlbum): Promise<Album> {
 		artists: [parseArtist(raw.user)]
 	}
 	if (raw.tracks?.[0]?.artwork_url != undefined) {
-		album.coverArtwork = [
-			await parseCoverArtwork(raw?.tracks?.[0]?.artwork_url)
-		]
+		album.coverArtwork = [await parseCoverArtwork(raw?.tracks?.[0]?.artwork_url)]
 	}
 	return album
 }

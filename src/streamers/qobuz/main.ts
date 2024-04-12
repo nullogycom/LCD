@@ -23,6 +23,7 @@ function md5(str: string): string {
 interface QobuzOptions {
 	appSecret: string
 	appId: string
+	token?: string
 }
 
 export default class Qobuz implements StreamerWithLogin {
@@ -34,6 +35,7 @@ export default class Qobuz implements StreamerWithLogin {
 	constructor(options: QobuzOptions) {
 		this.appSecret = options.appSecret
 		this.appId = options.appId
+		if (options.token) this.token = options.token
 	}
 
 	async #get(url: string, params: { [key: string]: string | number }) {
@@ -88,18 +90,20 @@ export default class Qobuz implements StreamerWithLogin {
 	}
 
 	async login(username: string, password: string) {
-		const params: { [key: string]: string } = {
-			username,
-			password: md5(password),
-			extra: 'partner',
-			app_id: this.appId
-		}
+		if (!this.token) {
+			const params: { [key: string]: string } = {
+				username,
+				password: md5(password),
+				extra: 'partner',
+				app_id: this.appId
+			}
 
-		interface LoginResponse {
-			user_auth_token: string
+			interface LoginResponse {
+				user_auth_token: string
+			}
+			const loginResponse = <LoginResponse>await this.#getSigned('user/login', params)
+			this.token = loginResponse.user_auth_token
 		}
-		const loginResponse = <LoginResponse>await this.#getSigned('user/login', params)
-		this.token = loginResponse.user_auth_token
 	}
 
 	async search(query: string, limit = 10): Promise<SearchResults> {
