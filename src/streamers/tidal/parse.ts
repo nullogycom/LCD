@@ -9,7 +9,10 @@ export interface RawArtist {
 }
 
 export function parseArtist(raw: RawArtist): Artist {
-	const picturePath = raw?.picture?.replace(/-/gm, '/')
+	let picturePath
+
+	if (raw?.picture != null) picturePath = raw?.picture?.replace(/-/gm, '/')
+	else picturePath = null
 	const artist: Artist = {
 		id: raw.id,
 		url: raw.url ?? `https://www.tidal.com/artist/${raw.id}`,
@@ -37,12 +40,20 @@ export interface RawAlbum {
 }
 
 export function parseAlbum(raw: RawAlbum): Album {
-	const coverPath = raw.cover.replace(/-/gm, '/')
+	let coverPath
+
+	if (raw.cover) coverPath = raw.cover.replace(/-/gm, '/')
+	else coverPath = null
+
 	const album: Album = {
 		id: raw.id,
 		url: raw.url ?? `https://tidal.com/browse/album/${raw.id}`,
 		title: raw.title,
-		coverArtwork: [
+		coverArtwork: []
+	}
+
+	if (coverPath)
+		album.coverArtwork = [
 			{
 				url: `https://resources.tidal.com/images/${coverPath}/160x160.jpg`,
 				width: 160,
@@ -59,7 +70,6 @@ export function parseAlbum(raw: RawAlbum): Album {
 				height: 1280
 			}
 		]
-	}
 	if (raw.upc) album.upc = raw.upc
 	if (raw.artists) album.artists = raw.artists.map(parseArtist)
 	if (raw.numberOfTracks) album.trackCount = raw.numberOfTracks
