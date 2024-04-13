@@ -9,7 +9,7 @@ export interface RawArtist {
 }
 
 export function parseArtist(raw: RawArtist): Artist {
-	const picturePath = raw.picture?.replace(/-/gm, '/')
+	const picturePath = raw?.picture?.replace(/-/gm, '/')
 	const artist: Artist = {
 		id: raw.id,
 		url: raw.url ?? `https://www.tidal.com/artist/${raw.id}`,
