@@ -1,6 +1,6 @@
 import fetch, { HeadersInit } from 'node-fetch'
 import { DEFAULT_HEADERS, SC_VERSION } from './constants.js'
-import { Streamer, SearchResults, GetByUrlResponse, GetStreamResponse } from '../../types.js'
+import { ItemType, Streamer, SearchResults, GetByUrlResponse, GetStreamResponse } from '../../types.js'
 import {
 	parseAlbum,
 	parseTrack,
@@ -97,7 +97,7 @@ export default class Soundcloud implements Streamer {
 		return client
 	}
 
-	getTypeFromUrl(url: string): 'artist' | 'album' | 'track' {
+	async getTypeFromUrl(url: string): Promise<ItemType> {
 		const { pathname } = new URL(url)
 		if (pathname.split('/').slice(1).length == 1) return 'artist'
 		else {
@@ -125,7 +125,7 @@ export default class Soundcloud implements Streamer {
 	async #getMetadata(url: string): Promise<GetByUrlResponse> {
 		// loosely based off: https://github.com/wukko/cobalt/blob/92c0e1d7b7df262fcd82ea7f5cf8c58c6d2ad744/src/modules/processing/services/soundcloud.js
 
-		const type = this.getTypeFromUrl(url)
+		const type = await this.getTypeFromUrl(url)
 		const client = await this.#getClient()
 
 		// getting the IDs and track authorization

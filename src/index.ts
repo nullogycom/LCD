@@ -1,4 +1,4 @@
-import { GetByUrlResponse, SearchResults, Streamer, StreamerWithLogin } from './types.js'
+import { ItemType, GetByUrlResponse, SearchResults, Streamer, StreamerWithLogin } from './types.js'
 
 interface LucidaOptions {
 	modules: { [key: string]: Streamer | StreamerWithLogin }
@@ -38,12 +38,12 @@ class Lucida {
 		const moduleNames = Object.keys(this.modules)
 		return Object.fromEntries(results.map((e, i) => [moduleNames[i], e]))
 	}
-	getTypeFromUrl(url: string): 'artist' | 'album' | 'track' {
+	async getTypeFromUrl(url: string): Promise<ItemType> {
 		const urlObj = new URL(url)
 		for (const i in this.modules) {
 			const matches = this.modules[i].hostnames.includes(urlObj.hostname)
 			if (!matches) continue
-			return this.modules[i].getTypeFromUrl(url)
+			return await this.modules[i].getTypeFromUrl(url)
 		}
 		throw new Error(`Couldn't find module for hostname ${urlObj.hostname}`)
 	}

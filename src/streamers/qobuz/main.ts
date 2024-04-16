@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import fetch from 'node-fetch'
 import {
+	ItemType,
 	StreamerWithLogin,
 	SearchResults,
 	GetByUrlResponse,
@@ -214,7 +215,7 @@ export default class Qobuz implements StreamerWithLogin {
 		}
 		return [urlParts[0], urlParts[1]]
 	}
-	getTypeFromUrl(url: string): 'artist' | 'album' | 'track' {
+	async getTypeFromUrl(url: string): Promise<ItemType> {
 		return this.#getUrlParts(url)[0]
 	}
 	async getByUrl(url: string): Promise<GetByUrlResponse> {

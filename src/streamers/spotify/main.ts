@@ -1,6 +1,6 @@
 import Librespot, { LibrespotOptions } from 'librespot'
 import { parseArtist, parseAlbum, parseTrack } from './parse.js'
-import { GetByUrlResponse, SearchResults, StreamerWithLogin } from '../../types.js'
+import { ItemType, GetByUrlResponse, SearchResults, StreamerWithLogin } from '../../types.js'
 
 class Spotify implements StreamerWithLogin {
 	client: Librespot
@@ -21,7 +21,7 @@ class Spotify implements StreamerWithLogin {
 		if (!parts[1]) throw new Error('Unknown Spotify URL')
 		return [parts[0], parts[1]]
 	}
-	getTypeFromUrl(url: string) {
+	async getTypeFromUrl(url: string) {
 		return this.#getUrlParts(url)[0]
 	}
 	async getByUrl(url: string, limit = 0): Promise<GetByUrlResponse> {

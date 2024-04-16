@@ -1,6 +1,6 @@
 type Id = string | number
 
-type ItemType = 'artist' | 'album' | 'track'
+export type ItemType = 'artist' | 'album' | 'track'
 
 export interface CoverArtwork {
 	url: string
@@ -84,7 +84,7 @@ export interface AlbumGetByUrlResponse {
 export interface Streamer {
 	hostnames: string[]
 	search(query: string, limit: number): Promise<SearchResults>
-	getTypeFromUrl(url: string): ItemType
+	getTypeFromUrl(url: string): Promise<ItemType>
 	getByUrl:
 		| ((url: string) => Promise<GetByUrlResponse>)
 		| ((url: string, limit?: number) => Promise<GetByUrlResponse>)
