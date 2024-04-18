@@ -55,7 +55,7 @@ export interface SearchResults {
 }
 
 export interface GetStreamResponse {
-	sizeBytes: number
+	sizeBytes?: number
 	stream: NodeJS.ReadableStream
 	mimeType: string
 }

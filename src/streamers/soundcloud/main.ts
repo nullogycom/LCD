@@ -1,6 +1,12 @@
 import fetch, { HeadersInit } from 'node-fetch'
 import { DEFAULT_HEADERS, SC_VERSION } from './constants.js'
-import { ItemType, Streamer, SearchResults, GetByUrlResponse, GetStreamResponse } from '../../types.js'
+import {
+	ItemType,
+	Streamer,
+	SearchResults,
+	GetByUrlResponse,
+	GetStreamResponse
+} from '../../types.js'
 import {
 	parseAlbum,
 	parseTrack,

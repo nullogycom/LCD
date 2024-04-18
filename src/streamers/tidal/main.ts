@@ -1,6 +1,13 @@
 import fetch from 'node-fetch'
 import { spawn } from 'child_process'
-import { ItemType, GetByUrlResponse, GetStreamResponse, SearchResults, Streamer, Track } from '../../types.js'
+import {
+	ItemType,
+	GetByUrlResponse,
+	GetStreamResponse,
+	SearchResults,
+	Streamer,
+	Track
+} from '../../types.js'
 import { TIDAL_AUTH_BASE, TIDAL_API_BASE } from './constants.js'
 import {
 	Contributor,
@@ -271,11 +278,12 @@ export default class Tidal implements Streamer {
 			}
 		)
 		const manifestStr = Buffer.from(playbackInfoResponse.manifest, 'base64').toString('utf-8')
+		interface Manifest {
+			mimeType: string
+			urls: string[]
+		}
+
 		if (playbackInfoResponse.manifestMimeType != 'application/dash+xml') {
-			interface Manifest {
-				mimeType: string
-				urls: string[]
-			}
 			const manifest = <Manifest>JSON.parse(manifestStr)
 			const streamResponse = await fetch(manifest.urls[0])
 			return {
@@ -284,6 +292,7 @@ export default class Tidal implements Streamer {
 				stream: <NodeJS.ReadableStream>streamResponse.body
 			}
 		}
+
 		const trackUrls = parseMpd(manifestStr)
 
 		const ffmpegProc = spawn('ffmpeg', [
@@ -318,8 +327,7 @@ export default class Tidal implements Streamer {
 		load()
 
 		return {
-			mimeType: playbackInfoResponse.manifestMimeType,
-			sizeBytes: manifestStr.length,
+			mimeType: 'audio/flac',
 			stream: ffmpegProc.stdout
 		}
 	}
