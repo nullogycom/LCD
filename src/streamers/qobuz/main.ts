@@ -91,20 +91,19 @@ export default class Qobuz implements StreamerWithLogin {
 	}
 
 	async login(username: string, password: string) {
-		if (!this.token) {
-			const params: { [key: string]: string } = {
-				username,
-				password: md5(password),
-				extra: 'partner',
-				app_id: this.appId
-			}
-
-			interface LoginResponse {
-				user_auth_token: string
-			}
-			const loginResponse = <LoginResponse>await this.#getSigned('user/login', params)
-			this.token = loginResponse.user_auth_token
+		if (this.token) return
+		const params: { [key: string]: string } = {
+			username,
+			password: md5(password),
+			extra: 'partner',
+			app_id: this.appId
 		}
+
+		interface LoginResponse {
+			user_auth_token: string
+		}
+		const loginResponse = <LoginResponse>await this.#getSigned('user/login', params)
+		this.token = loginResponse.user_auth_token
 	}
 
 	async search(query: string, limit = 10): Promise<SearchResults> {
@@ -140,11 +139,13 @@ export default class Qobuz implements StreamerWithLogin {
 		}
 		interface RawTrackFileResponse {
 			url: string
-			mime_type: string
+			mime_type: string,
+			sample: boolean
 		}
 		const trackFileResponse = <RawTrackFileResponse>(
 			await this.#getSigned('track/getFileUrl', params)
 		)
+		if (trackFileResponse.sample == true) throw new Error('Could not get non-sample file. Check your token.')
 		const streamResponse = await fetch(trackFileResponse.url)
 		return {
 			mimeType: trackFileResponse.mime_type,
