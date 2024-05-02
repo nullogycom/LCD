@@ -58,8 +58,7 @@ export default class Tidal implements Streamer {
 			if (!this.refreshToken) return
 			if (await this.sessionValid()) return
 			const success = await this.refresh()
-			if (success) console.log(`[tidal] Refreshed tokens successfully`)
-			else console.log(`[tidal] Failed to refresh tokens, this could be a bad sign`)
+			if (!success) console.log(`[tidal] Failed to refresh tokens, this could be a bad sign`)
 		}
 		getReady()
 	}
