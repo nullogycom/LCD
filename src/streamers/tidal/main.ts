@@ -263,10 +263,11 @@ export default class Tidal implements Streamer {
 			tracks: tracksResponse.items.map(parseTrack)
 		}
 	}
-	async #getFileUrl(trackId: number | string, quality = 'HI_RES'): Promise<GetStreamResponse> {
+	async #getFileUrl(trackId: number | string, quality = 'LOSSLESS'): Promise<GetStreamResponse> {
 		interface PlaybackInfo {
 			manifest: string
 			manifestMimeType: string
+			audioQuality: 'LOW' | 'HIGH' | 'LOSSLESS' | 'HI_RES'
 		}
 		const playbackInfoResponse = <PlaybackInfo>await this.#get(
 			`tracks/${trackId}/playbackinfopostpaywall/v4`,
@@ -277,6 +278,12 @@ export default class Tidal implements Streamer {
 				prefetch: 'false'
 			}
 		)
+ 
+		if (
+			playbackInfoResponse.audioQuality == 'HIGH' ||
+			playbackInfoResponse.audioQuality == 'LOW'
+		) throw new Error('This ripper is incompatible with AAC codecs formats at the moment.')
+
 		const manifestStr = Buffer.from(playbackInfoResponse.manifest, 'base64').toString('utf-8')
 		interface Manifest {
 			mimeType: string

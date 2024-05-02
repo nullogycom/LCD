@@ -139,13 +139,14 @@ export default class Qobuz implements StreamerWithLogin {
 		}
 		interface RawTrackFileResponse {
 			url: string
-			mime_type: string,
+			mime_type: string
 			sample: boolean
 		}
 		const trackFileResponse = <RawTrackFileResponse>(
 			await this.#getSigned('track/getFileUrl', params)
 		)
-		if (trackFileResponse.sample == true) throw new Error('Could not get non-sample file. Check your token.')
+		if (trackFileResponse.sample == true)
+			throw new Error('Could not get non-sample file. Check your token.')
 		const streamResponse = await fetch(trackFileResponse.url)
 		return {
 			mimeType: trackFileResponse.mime_type,
