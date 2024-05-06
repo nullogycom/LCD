@@ -1,6 +1,8 @@
 import { Artist, Album, Track } from '../../types.js'
+import { spawn } from 'child_process'
 import fetch from 'node-fetch'
 import { imageSize as sizeOf } from 'image-size'
+import Stream from 'stream'
 
 async function parseCoverArtwork(url: string) {
 	const resp = await fetch(url)
@@ -97,6 +99,51 @@ export async function parseTrack(raw: RawTrack): Promise<Track> {
 	}
 
 	return track
+}
+
+export async function parseHls(url: string, codec: string): Promise<NodeJS.ReadableStream> {
+	const m3u8 = await (await fetch(url)).text()
+
+	const urls = <URL[]>[]
+	for (const i in m3u8.split('\n')) {
+		if (m3u8.split('\n')[i].startsWith('#')) continue
+		else urls.push(new URL(m3u8.split('\n')[i]))
+	}
+
+	const stream = new Stream.Readable({
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		read() {}
+	})
+
+	async function load() {
+		for (const url of urls) {
+			const resp = await fetch(url)
+			if (!resp.body) throw new Error('Response has no body')
+			for await (const chunk of resp.body) {
+				stream.push(chunk)
+			}
+		}
+		stream.push(null)
+	}
+
+	const ffmpegProc = spawn('ffmpeg', [
+		'-hide_banner',
+		'-loglevel',
+		'error',
+		'-i',
+		'-',
+		'-c:a',
+		'copy',
+		'-f',
+		codec,
+		'-'
+	])
+
+	stream.pipe(ffmpegProc.stdin)
+	ffmpegProc.stderr.pipe(process.stderr)
+	load()
+
+	return stream
 }
 
 export interface RawSearchResults {

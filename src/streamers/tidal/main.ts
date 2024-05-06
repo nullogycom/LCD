@@ -277,11 +277,9 @@ export default class Tidal implements Streamer {
 				prefetch: 'false'
 			}
 		)
- 
-		if (
-			playbackInfoResponse.audioQuality == 'HIGH' ||
-			playbackInfoResponse.audioQuality == 'LOW'
-		) throw new Error('This ripper is incompatible with AAC codecs formats at the moment.')
+
+		if (playbackInfoResponse.audioQuality == 'HIGH' || playbackInfoResponse.audioQuality == 'LOW')
+			throw new Error('This ripper is incompatible with AAC codecs formats at the moment.')
 
 		const manifestStr = Buffer.from(playbackInfoResponse.manifest, 'base64').toString('utf-8')
 		interface Manifest {

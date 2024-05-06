@@ -91,19 +91,20 @@ export default class Qobuz implements StreamerWithLogin {
 	}
 
 	async login(username: string, password: string) {
-		if (this.token) return
-		const params: { [key: string]: string } = {
-			username,
-			password: md5(password),
-			extra: 'partner',
-			app_id: this.appId
-		}
+		if (!this.token) {
+			const params: { [key: string]: string } = {
+				username,
+				password: md5(password),
+				extra: 'partner',
+				app_id: this.appId
+			}
 
-		interface LoginResponse {
-			user_auth_token: string
+			interface LoginResponse {
+				user_auth_token: string
+			}
+			const loginResponse = <LoginResponse>await this.#getSigned('user/login', params)
+			this.token = loginResponse.user_auth_token
 		}
-		const loginResponse = <LoginResponse>await this.#getSigned('user/login', params)
-		this.token = loginResponse.user_auth_token
 	}
 
 	async search(query: string, limit = 10): Promise<SearchResults> {

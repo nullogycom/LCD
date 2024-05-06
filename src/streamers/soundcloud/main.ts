@@ -11,6 +11,7 @@ import {
 	parseAlbum,
 	parseTrack,
 	parseArtist,
+	parseHls,
 	RawSearchResults,
 	RawTrack,
 	RawAlbum,
@@ -258,17 +259,47 @@ async function getStream(
 	oauthToken?: string | undefined
 ): Promise<GetStreamResponse> {
 	const progressive = transcodings.filter((x) => x.format?.protocol == 'progressive')[0]
-	const streamUrlResp = await fetch(
-		`${progressive.url}?client_id=${client.id}&track_authorization=${trackAuth}`,
-		{
-			headers: headers(oauthToken)
+
+	if (progressive?.url) {
+		const streamUrlResp = await fetch(
+			`${progressive.url}?client_id=${client.id}&track_authorization=${trackAuth}`,
+			{
+				headers: headers(oauthToken)
+			}
+		)
+		const json = <{ url: string }>await streamUrlResp.json()
+		const streamResp = await fetch(json.url)
+		return {
+			mimeType: progressive.format.mime_type,
+			sizeBytes: parseInt(<string>streamResp.headers.get('Content-Length')),
+			stream: <NodeJS.ReadableStream>streamResp.body
 		}
-	)
-	const json = <{ url: string }>await streamUrlResp.json()
-	const streamResp = await fetch(json.url)
-	return {
-		mimeType: progressive.format.mime_type,
-		sizeBytes: parseInt(<string>streamResp.headers.get('Content-Length')),
-		stream: <NodeJS.ReadableStream>streamResp.body
+	} else {
+		const filteredTranscodings = transcodings.filter((x) => x?.preset.startsWith('opus_'))
+		let url
+		let selected
+
+		if (filteredTranscodings[filteredTranscodings.length - 1]?.url) {
+			url = filteredTranscodings[filteredTranscodings.length - 1]?.url
+			selected = filteredTranscodings[filteredTranscodings.length - 1]
+		} else {
+			url = transcodings[0]?.url
+			selected = transcodings[0]
+		}
+
+		const streamUrlResp = await fetch(
+			`${url}?client_id=${client.id}&track_authorization=${trackAuth}`,
+			{
+				headers: headers(oauthToken)
+			}
+		)
+
+		const json = <{ url: string }>await streamUrlResp.json()
+		const codec = selected.format.mime_type.split('/')[1].split(';')[0].split(' ')[0]
+
+		return {
+			mimeType: selected.format.mime_type,
+			stream: await parseHls(json.url, codec)
+		}
 	}
 }
