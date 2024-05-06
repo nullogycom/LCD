@@ -27,7 +27,7 @@
 		"type": "git",
 		"url": "https://git.gay/lucida/lucida"
 	},
-	"license": "AGPL",
+	"license": "OQL",
 	"dependencies": {
 		"image-size": "^1.1.1",
 		"librespot": "^0.2.0",

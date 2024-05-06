@@ -102,4 +102,4 @@ Lucida is partially inspired by [OrpheusDL](https://github.com/yarrm80s/orpheusd
 
 ## License
 
-Copyright hazycora. Licensed under AGPLv3.
+Copyright hazycora. Under the Opinionated Queer License.
