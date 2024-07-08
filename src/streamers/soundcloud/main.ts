@@ -156,8 +156,10 @@ export default class Soundcloud implements Streamer {
 
 				return {
 					type: 'track',
-					getStream: async () => {
+					getStream: async (hq?: boolean) => {
+						if (!hq) hq = false
 						return await getStream(
+							hq,
 							api.media.transcodings,
 							api.track_authorization,
 							client,
@@ -253,53 +255,43 @@ async function fetchKey(response: string) {
 }
 
 async function getStream(
+	hq: boolean,
 	transcodings: Array<SoundcloudTranscoding>,
 	trackAuth: string,
 	client: ScClient,
 	oauthToken?: string | undefined
 ): Promise<GetStreamResponse> {
-	const progressive = transcodings.filter((x) => x.format?.protocol == 'progressive')[0]
+	let filter = transcodings.filter((x) => x.quality == 'hq')
+	if (hq == true && filter.length == 0) throw new Error('Could not find HQ format.')
+	
+	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('aac_')) 	// prioritize aac (go+)
+	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('opus_')) // then opus
+	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('mp3_')) 	// then mp3
+	if (filter.length == 0) throw new Error('Could not find applicable format.')							// and this is just in case none of those exist
 
-	if (progressive?.url) {
-		const streamUrlResp = await fetch(
-			`${progressive.url}?client_id=${client.id}&track_authorization=${trackAuth}`,
-			{
-				headers: headers(oauthToken)
-			}
-		)
-		const json = <{ url: string }>await streamUrlResp.json()
+	const transcoding = filter[0]
+	const streamUrlResp = await fetch(
+		`${transcoding.url}?client_id=${client.id}&track_authorization=${trackAuth}`,
+		{
+			headers: headers(oauthToken)
+		}
+	)
+	const json = <{ url: string }>await streamUrlResp.json()
+	if (!json.url) throw new Error('Stream URL could not be retreieved.')
+
+	if (transcoding.format.protocol == 'progressive') {
 		const streamResp = await fetch(json.url)
 		return {
-			mimeType: progressive.format.mime_type,
+			mimeType: transcoding.format.mime_type,
 			sizeBytes: parseInt(<string>streamResp.headers.get('Content-Length')),
 			stream: <NodeJS.ReadableStream>streamResp.body
 		}
 	} else {
-		const filteredTranscodings = transcodings.filter((x) => x?.preset.startsWith('opus_'))
-		let url
-		let selected
-
-		if (filteredTranscodings[filteredTranscodings.length - 1]?.url) {
-			url = filteredTranscodings[filteredTranscodings.length - 1]?.url
-			selected = filteredTranscodings[filteredTranscodings.length - 1]
-		} else {
-			url = transcodings[0]?.url
-			selected = transcodings[0]
-		}
-
-		const streamUrlResp = await fetch(
-			`${url}?client_id=${client.id}&track_authorization=${trackAuth}`,
-			{
-				headers: headers(oauthToken)
-			}
-		)
-
-		const json = <{ url: string }>await streamUrlResp.json()
-		const codec = selected.format.mime_type.split('/')[1].split(';')[0].split(' ')[0]
+		const container = transcoding.format.mime_type.split('/')[1].split(';')[0].split('+')[0]
 
 		return {
-			mimeType: selected.format.mime_type,
-			stream: await parseHls(json.url, codec)
+			mimeType: transcoding.format.mime_type,
+			stream: (await parseHls(json.url, container))
 		}
 	}
 }
