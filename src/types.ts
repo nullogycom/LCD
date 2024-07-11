@@ -45,6 +45,7 @@ export interface Track {
 	album?: Album
 	durationMs?: number
 	coverArtwork?: CoverArtwork[]
+	regions?: Region[]
 }
 
 export interface SearchResults {

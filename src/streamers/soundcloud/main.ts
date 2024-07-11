@@ -265,8 +265,8 @@ async function getStream(
 	if (hq == true && filter.length == 0) throw new Error('Could not find HQ format.')
 	
 	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('aac_')) 	// prioritize aac (go+)
-	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('opus_')) // then opus
 	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('mp3_')) 	// then mp3
+	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('opus_')) // then opus
 	if (filter.length == 0) throw new Error('Could not find applicable format.')							// and this is just in case none of those exist
 
 	const transcoding = filter[0]
