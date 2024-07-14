@@ -262,11 +262,11 @@ export default class Tidal implements Streamer {
 			tracks: tracksResponse.items.map(parseTrack)
 		}
 	}
-	async #getFileUrl(trackId: number | string, quality = 'LOSSLESS'): Promise<GetStreamResponse> {
+	async #getFileUrl(trackId: number | string, quality = 'HI_RES_LOSSLESS'): Promise<GetStreamResponse> {
 		interface PlaybackInfo {
 			manifest: string
 			manifestMimeType: string
-			audioQuality: 'LOW' | 'HIGH' | 'LOSSLESS' | 'HI_RES'
+			audioQuality: 'LOW' | 'HIGH' | 'LOSSLESS' | 'HI_RES' | 'HI_RES_LOSSLESS'
 		}
 		const playbackInfoResponse = <PlaybackInfo>await this.#get(
 			`tracks/${trackId}/playbackinfopostpaywall/v4`,
