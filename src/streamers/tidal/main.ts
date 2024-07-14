@@ -28,6 +28,7 @@ interface TidalOptions {
 	accessToken: string
 	refreshToken: string
 	expires: number
+	countryCode: string
 }
 
 interface LoginData {
@@ -37,12 +38,17 @@ interface LoginData {
 	expires_in: number
 }
 
+interface SessionData {
+	countryCode: string
+}
+
 export default class Tidal implements Streamer {
 	tvToken: string
 	tvSecret: string
 	accessToken: string
 	refreshToken: string
 	expires: number
+	countryCode: string
 	hostnames = ['tidal.com', 'www.tidal.com', 'listen.tidal.com']
 	failedAuth = false
 	constructor(options: TidalOptions) {
@@ -53,6 +59,7 @@ export default class Tidal implements Streamer {
 		this.accessToken = options.accessToken
 		this.refreshToken = options.refreshToken
 		this.expires = options.expires
+		this.countryCode = options.countryCode
 
 		const getReady = async () => {
 			if (!this.refreshToken) return
@@ -71,9 +78,10 @@ export default class Tidal implements Streamer {
 		}
 	}
 	async #get(url: string, params: { [key: string]: string | number } = {}): Promise<unknown> {
-		if (Date.now() > this.expires) await this.refresh()
 		if (this.failedAuth) throw new Error(`Last request failed to authorize, get new tokens`)
-		params.countryCode = params.countryCode ?? 'US'
+		if (Date.now() > this.expires) await this.refresh()
+		if (!this.countryCode) await this.getCountryCode()
+		params.countryCode = params.countryCode ?? this.countryCode
 		params.locale = params.locale ?? 'en_US'
 		params.deviceType = params.deviceType ?? 'TV'
 		for (const key in params) {
@@ -111,6 +119,15 @@ export default class Tidal implements Streamer {
 			headers: this.headers()
 		})
 		return resp.ok
+	}
+	async getCountryCode() {
+		const sessionResponse = await fetch('https://api.tidal.com/v1/sessions', {
+			headers: this.headers()
+		})
+		if (sessionResponse.status != 200) return false
+		const sessionData = <SessionData>await sessionResponse.json()
+		this.countryCode = sessionData.countryCode
+		return true
 	}
 	async getTokens() {
 		const deviceAuthResponse = await fetch(`${TIDAL_AUTH_BASE}oauth2/device_authorization`, {
@@ -151,6 +168,7 @@ export default class Tidal implements Streamer {
 			this.accessToken = loginData.access_token
 			this.refreshToken = loginData.refresh_token
 			this.expires = Date.now() + loginData.expires_in * 1000
+			await this.getCountryCode()
 
 			console.log('[tidal] Using the following new config:', this.getCurrentConfig())
 		}
@@ -164,7 +182,8 @@ export default class Tidal implements Streamer {
 			tvSecret: this.tvSecret,
 			accessToken: this.accessToken,
 			refreshToken: this.refreshToken,
-			expires: this.expires
+			expires: this.expires,
+			countryCode: this.countryCode
 		}
 	}
 	async refresh() {
@@ -262,11 +281,11 @@ export default class Tidal implements Streamer {
 			tracks: tracksResponse.items.map(parseTrack)
 		}
 	}
-	async #getFileUrl(trackId: number | string, quality = 'LOSSLESS'): Promise<GetStreamResponse> {
+	async #getFileUrl(trackId: number | string, quality = 'HI_RES_LOSSLESS'): Promise<GetStreamResponse> {
 		interface PlaybackInfo {
 			manifest: string
 			manifestMimeType: string
-			audioQuality: 'LOW' | 'HIGH' | 'LOSSLESS' | 'HI_RES'
+			audioQuality: 'LOW' | 'HIGH' | 'LOSSLESS' | 'HI_RES' | 'HI_RES_LOSSLESS'
 		}
 		const playbackInfoResponse = <PlaybackInfo>await this.#get(
 			`tracks/${trackId}/playbackinfopostpaywall/v4`,
