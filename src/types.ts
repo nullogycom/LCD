@@ -1,6 +1,7 @@
 type Id = string | number
 
-export type ItemType = 'artist' | 'album' | 'track'
+export type ItemType = 'artist' | 'album' | 'track' | 'episode' | 'podcast'
+export type Region = string
 
 export interface CoverArtwork {
 	url: string
@@ -27,6 +28,10 @@ export interface Album {
 	releaseDate?: Date
 	coverArtwork?: CoverArtwork[]
 	artists?: Artist[]
+	description?: string
+	copyright?: string,
+	label?: string,
+	genre?: string[]
 }
 
 export interface Track {
@@ -42,10 +47,40 @@ export interface Track {
 	producers?: string[]
 	composers?: string[]
 	lyricists?: string[]
+	performers?: string[]
+	engineers?: string[]
 	album?: Album
 	durationMs?: number
 	coverArtwork?: CoverArtwork[]
 	regions?: Region[]
+	genres?: string[]
+	releaseDate?: Date
+	description?: string
+}
+
+export interface Episode {
+	title: string
+	id: Id
+	url: string
+	explicit?: boolean
+	episodeNumber?: number
+	copyright?: string
+	description?: string
+	producers?: string[]
+	composers?: string[]
+	podcast?: Podcast
+	durationMs?: number
+	coverArtwork?: CoverArtwork[]
+	releaseDate?: Date
+}
+
+export interface Podcast {
+	title: string
+	id: Id
+	url: string
+	explicit?: boolean
+	description?: string
+	coverArtwork?: CoverArtwork[]
 }
 
 export interface SearchResults {
@@ -65,12 +100,19 @@ export interface GetStreamResponse {
 export type GetByUrlResponse =
 	| TrackGetByUrlResponse
 	| ArtistGetByUrlResponse
-	| AlbumGetByUrlResponse
+	| AlbumGetByUrlResponse 
+	| EpisodeGetByUrlResponse
+	| PodcastGetByUrlResponse
 
 export interface TrackGetByUrlResponse {
 	type: 'track'
 	getStream(): Promise<GetStreamResponse>
 	metadata: Track
+}
+export interface EpisodeGetByUrlResponse {
+	type: 'episode'
+	getStream(): Promise<GetStreamResponse>
+	metadata: Episode
 }
 export interface ArtistGetByUrlResponse {
 	type: 'artist'
@@ -81,6 +123,17 @@ export interface AlbumGetByUrlResponse {
 	tracks: Track[]
 	metadata: Album
 }
+export interface PodcastGetByUrlResponse {
+	type: 'podcast'
+	episodes: Episode[]
+	metadata: Podcast
+}
+
+export interface StreamerAccount {
+	valid: boolean
+	premium?: boolean
+	country?: string
+} 
 
 export interface Streamer {
 	hostnames: string[]
@@ -90,6 +143,7 @@ export interface Streamer {
 		| ((url: string) => Promise<GetByUrlResponse>)
 		| ((url: string, limit?: number) => Promise<GetByUrlResponse>)
 	disconnect?(): Promise<void>
+	getAccountInfo?(): Promise<StreamerAccount>
 }
 
 export interface StreamerWithLogin extends Streamer {

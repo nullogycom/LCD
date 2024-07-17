@@ -6,7 +6,8 @@ import {
 	SearchResults,
 	GetByUrlResponse,
 	GetStreamResponse,
-	Track
+	Track,
+	StreamerAccount
 } from '../../types.js'
 import { DEFAULT_HEADERS } from './constants.js'
 import { parseAlbum, parseTrack, parseArtist, RawAlbum, RawArtist, RawTrack } from './parse.js'

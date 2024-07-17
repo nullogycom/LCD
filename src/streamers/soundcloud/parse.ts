@@ -81,10 +81,14 @@ export interface RawTrack {
 	kind: 'track'
 	id: number
 	title: string
+	duration: number,
+	created_at: string,
+	full_duration: number,
 	permalink_url: string
-	artwork_url?: string
-	full_duration: number
-	user: RawArtist
+	artwork_url?: string,
+	user: RawArtist,
+	last_modified: string,
+	description: string
 }
 
 export async function parseTrack(raw: RawTrack): Promise<Track> {
@@ -93,12 +97,12 @@ export async function parseTrack(raw: RawTrack): Promise<Track> {
 		title: raw.title,
 		url: raw.permalink_url,
 		artists: [parseArtist(raw.user)],
-		durationMs: raw.media?.transcodings?.[0]?.duration
+		durationMs: (raw.full_duration || raw.media?.transcodings?.[0]?.duration),
+		releaseDate: new Date(raw.created_at),
+		description: raw.description
 	}
 
-	if (raw?.artwork_url != undefined) {
-		track.coverArtwork = [await parseCoverArtwork(raw?.artwork_url)]
-	}
+	if (raw?.artwork_url != undefined) track.coverArtwork = [await parseCoverArtwork(raw?.artwork_url)]
 
 	return track
 }

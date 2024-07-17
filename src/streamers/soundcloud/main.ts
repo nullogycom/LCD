@@ -141,18 +141,21 @@ export default class Soundcloud implements Streamer {
 		switch (type) {
 			case 'track': {
 				const trackId = html
-					.split(`{"hydratable":"sound",`)?.[1]
-					?.split(`"id":`)?.[1]
-					?.split(',')?.[0]
+					.split(`<link rel="alternate" href="android-app://com.soundcloud.android/soundcloud/sounds:`)?.[1]
+					?.split(`">`)?.[0]
+
+				let naked = `https://api-v2.soundcloud.com/tracks/${trackId}`
+				let path = new URL(url).pathname 
+				if (path.split('/').length == 4) naked = `${naked}?secret_token=${path.split('/')[3]}`
 
 				const api = JSON.parse(
 					await (
 						await fetch(
-							this.#formatURL(`https://api-v2.soundcloud.com/tracks?ids=${trackId}`, client),
+							this.#formatURL(naked, client),
 							{ method: 'get', headers: headers(this.oauthToken) }
 						)
 					).text()
-				)[0]
+				)
 
 				return {
 					type: 'track',
@@ -215,6 +218,8 @@ export default class Soundcloud implements Streamer {
 					metadata: parseArtist(data)
 				}
 			}
+			default:
+				throw(`Type "${type}" not supported.`)
 		}
 	}
 	async #getRawTrackInfo(id: number | string, client: ScClient) {
