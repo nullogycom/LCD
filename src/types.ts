@@ -81,6 +81,7 @@ export interface Podcast {
 	explicit?: boolean
 	description?: string
 	coverArtwork?: CoverArtwork[]
+	episodes?: Episode[]
 }
 
 export interface SearchResults {

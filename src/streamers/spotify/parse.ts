@@ -33,9 +33,10 @@ export function parseTrack(raw: SpotifyTrack) {
 		trackNumber: raw.trackNumber,
 		discNumber: raw.discNumber,
 		artists: raw.artists?.map((e) => parseArtist(e)) ?? [],
-		durationMs: raw.durationMs
+		durationMs: raw.durationMs,
 	}
 	if (raw.album) track.album = parseAlbum(raw.album)
+	//if (raw?.isrc) track.isrc = raw.isrc
 	return track
 }
 
@@ -72,9 +73,10 @@ export function parsePodcast(raw: SpotifyPodcast) {
 		id: raw.id,
 		url: raw.externalUrl,
 		description: raw.description,
-		coverArtwork: parseThumbnails(raw.coverArtwork),
+		coverArtwork: parseThumbnails(raw.coverArtwork)
 	}
 	if (typeof raw.explicit == 'boolean') podcast.explicit = raw.explicit 
+	if (raw.episodes) podcast.episodes = raw.episodes.map((e) => parseEpisode(e))
 
 	return podcast
 }
