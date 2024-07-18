@@ -1,6 +1,6 @@
 {
 	"name": "lucida",
-	"version": "2.0.0-10",
+	"version": "2.0.0-11",
 	"description": "A modular music downloader tool",
 	"main": "build/index.js",
 	"type": "module",

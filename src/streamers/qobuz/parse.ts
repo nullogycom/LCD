@@ -61,7 +61,6 @@ export interface RawAlbum {
 }
 
 export function parseAlbum(raw: RawAlbum) {
-	console.log(raw)
 	const album: Album = {
 		title: raw.title,
 		id: raw.id,
