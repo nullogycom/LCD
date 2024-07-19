@@ -46,11 +46,12 @@ interface SoundcloudTranscoding {
 export default class Soundcloud implements Streamer {
 	hostnames = ['soundcloud.com', 'm.soundcloud.com', 'www.soundcloud.com']
 	oauthToken?: string
+	client?: ScClient
 	constructor(options: SoundcloudOptions) {
 		this.oauthToken = options?.oauthToken
 	}
 	async search(query: string, limit = 20): Promise<SearchResults> {
-		const client = await this.#getClient()
+		const client = this.client || (await this.#getClient())
 		const response = await fetch(
 			this.#formatURL(
 				`https://api-v2.soundcloud.com/search?q=${encodeURIComponent(
@@ -83,7 +84,7 @@ export default class Soundcloud implements Streamer {
 			else if (resultResponse.collection[i].kind == 'playlist')
 				items.albums.push(await parseAlbum(<RawAlbum>resultResponse.collection[i]))
 			else if (resultResponse.collection[i].kind == 'user')
-				items.artists.push(parseArtist(<RawArtist>resultResponse.collection[i]))
+				items.artists.push((await parseArtist(<RawArtist>resultResponse.collection[i])))
 		}
 
 		return items
@@ -103,6 +104,7 @@ export default class Soundcloud implements Streamer {
 			id: await fetchKey(response)
 		}
 
+		this.client = client
 		return client
 	}
 
@@ -134,7 +136,7 @@ export default class Soundcloud implements Streamer {
 		// loosely based off: https://github.com/wukko/cobalt/blob/92c0e1d7b7df262fcd82ea7f5cf8c58c6d2ad744/src/modules/processing/services/soundcloud.js
 
 		const type = await this.getTypeFromUrl(url)
-		const client = await this.#getClient()
+		const client = this.client || (await this.#getClient())
 
 		// getting the IDs and track authorization
 		const html = await (await fetch(url, { method: 'get', headers: headers() })).text()
@@ -179,17 +181,13 @@ export default class Soundcloud implements Streamer {
 				const parsed: GetByUrlResponse = {
 					type: 'album',
 					metadata: await parseAlbum(data),
-					tracks: await Promise.all(
-						data.tracks.map(async (track: RawTrack) => {
-							if (!track.title) track = await this.#getRawTrackInfo(track.id, client)
-							track.user = data.user
-							return parseTrack(track)
-						})
-					)
+					tracks: []
 				}
 
 				for (const i in data.tracks) {
-					const track = data.tracks[i]
+					let track = data.tracks[i]
+
+					if (!track.title) track = await this.#getRawTrackInfo(track.id, client)
 
 					const parsedTrack = {
 						type: 'track',
@@ -217,7 +215,7 @@ export default class Soundcloud implements Streamer {
 
 				return {
 					type: 'artist',
-					metadata: parseArtist(data)
+					metadata: (await parseArtist(data))
 				}
 			}
 			default:
@@ -232,9 +230,9 @@ export default class Soundcloud implements Streamer {
 					headers: headers(this.oauthToken)
 				})
 			).text()
-		)[0]
+		)
 
-		return api
+		return {...api, id}
 	}
 	async getAccountInfo(): Promise<StreamerAccount> {
 		const track = <TrackGetByUrlResponse>await this.getByUrl('https://soundcloud.com/ween/polka-dot-tail')

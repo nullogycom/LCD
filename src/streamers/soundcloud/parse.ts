@@ -36,7 +36,7 @@ export interface Headers {
 	'User-Agent': string
 }
 
-export function parseArtist(raw: RawArtist): Artist {
+export async function parseArtist(raw: RawArtist): Promise<Artist> {
 	const artist: Artist = {
 		id: raw.id,
 		url: raw.permalink_url,
@@ -56,6 +56,7 @@ export interface RawAlbum {
 	track_count: number
 	release_date: string
 	user: RawArtist
+	user_id: number | string
 	kind: 'playlist'
 }
 
@@ -66,7 +67,7 @@ export async function parseAlbum(raw: RawAlbum): Promise<Album> {
 		url: raw.permalink_url,
 		trackCount: raw.track_count,
 		releaseDate: new Date(raw.release_date),
-		artists: [parseArtist(raw.user)]
+		artists: [(await parseArtist(raw.user))]
 	}
 	if (raw.tracks?.[0]?.artwork_url != undefined) {
 		album.coverArtwork = [await parseCoverArtwork(raw?.tracks?.[0]?.artwork_url)]
@@ -79,7 +80,7 @@ export interface RawTrack {
 		transcodings?: { duration: number }[]
 	}
 	kind: 'track'
-	id: number
+	id: number | string
 	title: string
 	duration: number,
 	created_at: string,
@@ -89,6 +90,7 @@ export interface RawTrack {
 	user: RawArtist,
 	last_modified: string,
 	description: string
+	user_id: number | string
 }
 
 export async function parseTrack(raw: RawTrack): Promise<Track> {
@@ -96,7 +98,7 @@ export async function parseTrack(raw: RawTrack): Promise<Track> {
 		id: raw.id,
 		title: raw.title,
 		url: raw.permalink_url,
-		artists: [parseArtist(raw.user)],
+		artists: [(await parseArtist(raw.user))],
 		durationMs: (raw.full_duration || raw.media?.transcodings?.[0]?.duration),
 		releaseDate: new Date(raw.created_at),
 		description: raw.description
