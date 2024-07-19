@@ -227,7 +227,7 @@ export default class Soundcloud implements Streamer {
 	async #getRawTrackInfo(id: number | string, client: ScClient) {
 		const api = JSON.parse(
 			await (
-				await fetch(this.#formatURL(`hhttps://api-v2.soundcloud.com/tracks/${id}`, client), {
+				await fetch(this.#formatURL(`https://api-v2.soundcloud.com/tracks/${id}`, client), {
 					method: 'get',
 					headers: headers(this.oauthToken)
 				})
