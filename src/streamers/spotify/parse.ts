@@ -36,12 +36,13 @@ export function parseTrack(raw: SpotifyTrack) {
 		durationMs: raw.durationMs,
 	}
 	if (raw.album) track.album = parseAlbum(raw.album)
-	//if (raw?.isrc) track.isrc = raw.isrc
+	if (raw?.isrc) track.isrc = raw.isrc
+	if (raw?.album?.availableMarkets) track.regions = raw.album.availableMarkets
 	return track
 }
 
-export function parseAlbum(raw: SpotifyAlbum): Album {
-	return {
+export function parseAlbum(raw: SpotifyAlbum) {
+	const album: Album = {
 		title: raw.name,
 		id: raw.id,
 		url: raw.externalUrl,
@@ -50,6 +51,10 @@ export function parseAlbum(raw: SpotifyAlbum): Album {
 		coverArtwork: parseThumbnails(raw.coverArtwork),
 		artists: raw.artists.map((e) => parseArtist(e)),
 	}
+
+	if (raw.availableMarkets) album.regions = raw.availableMarkets
+
+	return album
 }
 
 export function parseEpisode(raw: SpotifyEpisode) {

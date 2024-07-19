@@ -108,9 +108,17 @@ class Spotify implements StreamerWithLogin {
 		}
 	}
 	async getAccountInfo(): Promise<StreamerAccount> {
+		const info = await this.client.get.me()
+
+		let premium
+		if (info.plan == 'premium') premium = true
+		else premium = false
+
 		return {
 			valid: true,
-			premium: (await this.client.isPremium())
+			premium, 
+			country: info.country,
+			explicit: info.allowExplicit
 		}
 	}
 	disconnect() {

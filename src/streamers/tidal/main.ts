@@ -6,9 +6,10 @@ import {
 	GetStreamResponse,
 	SearchResults,
 	Streamer,
-	Track
+	Track,
+	StreamerAccount
 } from '../../types.js'
-import { TIDAL_AUTH_BASE, TIDAL_API_BASE } from './constants.js'
+import { TIDAL_AUTH_BASE, TIDAL_API_BASE, TIDAL_SUBSCRIPTION_BASE } from './constants.js'
 import {
 	Contributor,
 	RawAlbum,
@@ -40,6 +41,22 @@ interface LoginData {
 
 interface SessionData {
 	countryCode: string
+	userId: number
+}
+
+interface SubscriptionData {
+	startDate: string
+	validUntil: string
+	status: string
+	subscription: {
+		type: string
+		offlineGracePeriod: number
+	}
+	highestSoundQuality: string
+	premiumAccess: boolean
+	canGetTrial: boolean
+	paymentType: string,
+	paymentOverdue: boolean
 }
 
 export default class Tidal implements Streamer {
@@ -49,6 +66,7 @@ export default class Tidal implements Streamer {
 	refreshToken: string
 	expires: number
 	countryCode: string
+	userId: number | undefined
 	hostnames = ['tidal.com', 'www.tidal.com', 'listen.tidal.com']
 	failedAuth = false
 	constructor(options: TidalOptions) {
@@ -77,7 +95,7 @@ export default class Tidal implements Streamer {
 			'User-Agent': 'TIDAL_ANDROID/1039 okhttp/3.14.9'
 		}
 	}
-	async #get(url: string, params: { [key: string]: string | number } = {}): Promise<unknown> {
+	async #get(url: string, params: { [key: string]: string | number } = {}, base: string = TIDAL_API_BASE): Promise<unknown> {
 		if (this.failedAuth) throw new Error(`Last request failed to authorize, get new tokens`)
 		if (Date.now() > this.expires) await this.refresh()
 		if (!this.countryCode) await this.getCountryCode()
@@ -88,7 +106,7 @@ export default class Tidal implements Streamer {
 			if (typeof params[key] == 'number') params[key] = params[key].toString()
 		}
 		const response = await fetch(
-			`${TIDAL_API_BASE}${url}?${new URLSearchParams(<{ [key: string]: string }>params)}`,
+			`${base}${url}?${new URLSearchParams(<{ [key: string]: string }>params)}`,
 			{
 				headers: this.headers()
 			}
@@ -127,6 +145,7 @@ export default class Tidal implements Streamer {
 		if (sessionResponse.status != 200) return false
 		const sessionData = <SessionData>await sessionResponse.json()
 		this.countryCode = sessionData.countryCode
+		this.userId = sessionData.userId
 		return true
 	}
 	async getTokens() {
@@ -390,6 +409,17 @@ export default class Tidal implements Streamer {
 					type,
 					metadata: await this.#getArtist(id)
 				}
+		}
+	}
+	async getAccountInfo(): Promise<StreamerAccount> {
+		if (!this.userId) await this.getCountryCode()
+		const subscription = <SubscriptionData>await this.#get(`users/${this.userId}/subscription`, {}, TIDAL_SUBSCRIPTION_BASE)
+
+		return {
+			valid: true,
+			premium: subscription.premiumAccess,
+			country: this.countryCode,
+			explicit: true
 		}
 	}
 }

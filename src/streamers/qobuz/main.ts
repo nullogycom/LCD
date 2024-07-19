@@ -28,6 +28,28 @@ interface QobuzOptions {
 	token?: string
 }
 
+interface LoginResponse {
+	user: {
+		id: number
+		display_name: string
+		language_code: string
+		zone: string,
+		store: string
+		country: string
+		creation_date: string
+		credential: {
+			parameters: {
+				lossy_streaming: boolean
+				lossless_streaming: boolean
+				hires_streaming: boolean
+			}
+			label: string
+			source: string
+		}
+	}
+	user_auth_token: string
+}
+
 export default class Qobuz implements StreamerWithLogin {
 	hostnames = ['play.qobuz.com', 'open.qobuz.com', 'www.qobuz.com', 'qobuz.com']
 	token?: string
@@ -100,9 +122,6 @@ export default class Qobuz implements StreamerWithLogin {
 				app_id: this.appId
 			}
 
-			interface LoginResponse {
-				user_auth_token: string
-			}
 			const loginResponse = <LoginResponse>await this.#getSigned('user/login', params)
 			this.token = loginResponse.user_auth_token
 		}
@@ -148,7 +167,7 @@ export default class Qobuz implements StreamerWithLogin {
 			await this.#getSigned('track/getFileUrl', params)
 		)
 		if (trackFileResponse.sample == true)
-			throw new Error('Could not get non-sample file. Check your token.')
+			throw new Error(`Could not get non-sample file. Make sure the track isn't download-only.`)
 		const streamResponse = await fetch(trackFileResponse.url)
 		return {
 			mimeType: trackFileResponse.mime_type,
@@ -250,6 +269,16 @@ export default class Qobuz implements StreamerWithLogin {
 			}
 			default:
 				throw new Error('URL unrecognised')
+		}
+	}
+	async getAccountInfo(): Promise<StreamerAccount> {
+		const loginResponse = <LoginResponse>await this.#getSigned('user/login', {extra: 'partner', device_manufacturer_id: 'undefined', app_id: this.appId})
+	
+		return {
+			valid: true,
+			premium: loginResponse.user.credential.parameters.hires_streaming,
+			country: loginResponse.user.country,
+			explicit: true
 		}
 	}
 }

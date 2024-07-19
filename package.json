@@ -1,6 +1,6 @@
 {
 	"name": "lucida",
-	"version": "2.0.0-11",
+	"version": "2.0.0-12",
 	"description": "A modular music downloader tool",
 	"main": "build/index.js",
 	"type": "module",
@@ -30,7 +30,7 @@
 	"license": "OQL",
 	"dependencies": {
 		"image-size": "^1.1.1",
-		"librespot": "^0.2.0",
+		"librespot": "^0.2.3",
 		"node-fetch": "^3.3.2",
 		"xmldom-qsa": "^1.1.3"
 	},

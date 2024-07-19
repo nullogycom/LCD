@@ -32,6 +32,7 @@ export interface Album {
 	copyright?: string,
 	label?: string,
 	genre?: string[]
+	regions?: string[]
 }
 
 export interface Track {
@@ -52,9 +53,9 @@ export interface Track {
 	album?: Album
 	durationMs?: number
 	coverArtwork?: CoverArtwork[]
-	regions?: Region[]
 	genres?: string[]
 	releaseDate?: Date
+	regions?: string[]
 	description?: string
 }
 
@@ -134,6 +135,7 @@ export interface StreamerAccount {
 	valid: boolean
 	premium?: boolean
 	country?: string
+	explicit?: boolean
 } 
 
 export interface Streamer {
@@ -144,7 +146,7 @@ export interface Streamer {
 		| ((url: string) => Promise<GetByUrlResponse>)
 		| ((url: string, limit?: number) => Promise<GetByUrlResponse>)
 	disconnect?(): Promise<void>
-	getAccountInfo?(): Promise<StreamerAccount>
+	getAccountInfo(): Promise<StreamerAccount>
 }
 
 export interface StreamerWithLogin extends Streamer {

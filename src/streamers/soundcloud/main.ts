@@ -5,7 +5,9 @@ import {
 	Streamer,
 	SearchResults,
 	GetByUrlResponse,
-	GetStreamResponse
+	GetStreamResponse,
+	StreamerAccount,
+	TrackGetByUrlResponse
 } from '../../types.js'
 import {
 	parseAlbum,
@@ -118,15 +120,14 @@ export default class Soundcloud implements Streamer {
 	}
 
 	#formatURL(og: string, client: ScClient): string {
-		let url = og
 		const parsed = new URL(og)
 
-		if (!parsed.searchParams.get('user_id')) url = url + `&user_id=${client.anonId}`
-		if (!parsed.searchParams.get('client_id')) url = url + `&client_id=${client.id}`
-		if (!parsed.searchParams.get('app_version')) url = url + `&app_version=${client.version}`
-		if (!parsed.searchParams.get('app_locale')) url = url + `&app_locale=en`
+		if (client.anonId) parsed.searchParams.append('user_id', client.anonId)
+		if (client.id) parsed.searchParams.append('client_id', client.id)
+		if (client.version) parsed.searchParams.append('app_version', client.version)
+		if (!parsed.searchParams.get('app_locale')) parsed.searchParams.append('app_locale', 'en')
 
-		return url
+		return parsed.href
 	}
 
 	async #getMetadata(url: string): Promise<GetByUrlResponse> {
@@ -141,8 +142,9 @@ export default class Soundcloud implements Streamer {
 		switch (type) {
 			case 'track': {
 				const trackId = html
-					.split(`<link rel="alternate" href="android-app://com.soundcloud.android/soundcloud/sounds:`)?.[1]
+					.split(`"soundcloud://sounds:`)?.[1]
 					?.split(`">`)?.[0]
+					
 
 				let naked = `https://api-v2.soundcloud.com/tracks/${trackId}`
 				let path = new URL(url).pathname 
@@ -157,7 +159,7 @@ export default class Soundcloud implements Streamer {
 					).text()
 				)
 
-				return {
+				return <TrackGetByUrlResponse>{
 					type: 'track',
 					getStream: async (hq?: boolean) => {
 						if (!hq) hq = false
@@ -225,7 +227,7 @@ export default class Soundcloud implements Streamer {
 	async #getRawTrackInfo(id: number | string, client: ScClient) {
 		const api = JSON.parse(
 			await (
-				await fetch(this.#formatURL(`https://api-v2.soundcloud.com/tracks?ids=${id}`, client), {
+				await fetch(this.#formatURL(`hhttps://api-v2.soundcloud.com/tracks/${id}`, client), {
 					method: 'get',
 					headers: headers(this.oauthToken)
 				})
@@ -233,6 +235,15 @@ export default class Soundcloud implements Streamer {
 		)[0]
 
 		return api
+	}
+	async getAccountInfo(): Promise<StreamerAccount> {
+		const track = <TrackGetByUrlResponse>await this.getByUrl('https://soundcloud.com/ween/polka-dot-tail')
+		const stream = await track.getStream()
+		if (stream.mimeType.startsWith('audio/mp4')) {
+			stream.stream.unpipe()
+			return {valid: true, premium: true, explicit: true}
+		}
+		else return {valid: true, premium: false, explicit: true}
 	}
 }
 
