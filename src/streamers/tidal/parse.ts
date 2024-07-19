@@ -174,10 +174,10 @@ export function parseMpd(mpdString: string): string[] {
 			if (!initializationUrl) throw new Error('No initialization url')
 			const mediaUrl = segTemplate.getAttribute('media')
 			if (!mediaUrl) throw new Error('No media url')
-			const trackUrls = []
+			let trackUrls = [initializationUrl]
 			const timeline = segTemplate.querySelector('SegmentTimeline')
 			if (timeline) {
-				const timeList = []
+				let numSegments = 0
 				// let currentTime = 0
 				for (const s of [...timeline.querySelectorAll('S')]) {
 					if (s.getAttribute('t')) {
@@ -185,13 +185,13 @@ export function parseMpd(mpdString: string): string[] {
 					}
 					const r = parseInt(s.getAttribute('r') || '0') + 1
 					if (!s.getAttribute('d')) throw new Error('No d property on SegmentTimeline')
-					for (let i = 0; i < r; i++) {
-						timeList.push(0)
-						// currentTime += parseInt(<string>s.getAttribute('d'))
-					}
+					numSegments += r
+					// for (let i = 0; i < r; i++) {
+					// 	 currentTime += parseInt(<string>s.getAttribute('d'))
+					// }
 				}
-				for (const i in timeList) {
-					trackUrls.push(mediaUrl.replace('$Number$', i))
+				for (let i = 1; i <= numSegments; i++) {
+					trackUrls.push(mediaUrl.replace('$Number$', i.toString()))
 				}
 			}
 			tracks.push(trackUrls)
