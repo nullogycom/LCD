@@ -174,7 +174,7 @@ export function parseMpd(mpdString: string): string[] {
 			if (!initializationUrl) throw new Error('No initialization url')
 			const mediaUrl = segTemplate.getAttribute('media')
 			if (!mediaUrl) throw new Error('No media url')
-			let trackUrls = [initializationUrl]
+			const trackUrls = [initializationUrl]
 			const timeline = segTemplate.querySelector('SegmentTimeline')
 			if (timeline) {
 				let numSegments = 0

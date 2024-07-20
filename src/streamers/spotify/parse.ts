@@ -1,4 +1,11 @@
-import type { SpotifyAlbum, SpotifyArtist, SpotifyThumbnail, SpotifyTrack, SpotifyEpisode, SpotifyPodcast } from 'librespot/types'
+import type {
+	SpotifyAlbum,
+	SpotifyArtist,
+	SpotifyThumbnail,
+	SpotifyTrack,
+	SpotifyEpisode,
+	SpotifyPodcast
+} from 'librespot/types'
 import { Album, Artist, Episode, Podcast, Track } from '../../types.js'
 
 function parseThumbnails(raw: SpotifyThumbnail[]) {
@@ -33,7 +40,7 @@ export function parseTrack(raw: SpotifyTrack) {
 		trackNumber: raw.trackNumber,
 		discNumber: raw.discNumber,
 		artists: raw.artists?.map((e) => parseArtist(e)) ?? [],
-		durationMs: raw.durationMs,
+		durationMs: raw.durationMs
 	}
 	if (raw.album) track.album = parseAlbum(raw.album)
 	if (raw?.isrc) track.isrc = raw.isrc
@@ -49,7 +56,7 @@ export function parseAlbum(raw: SpotifyAlbum) {
 		trackCount: raw.totalTracks,
 		releaseDate: raw.releaseDate,
 		coverArtwork: parseThumbnails(raw.coverArtwork),
-		artists: raw.artists.map((e) => parseArtist(e)),
+		artists: raw.artists.map((e) => parseArtist(e))
 	}
 
 	if (raw.availableMarkets) album.regions = raw.availableMarkets
@@ -80,7 +87,7 @@ export function parsePodcast(raw: SpotifyPodcast) {
 		description: raw.description,
 		coverArtwork: parseThumbnails(raw.coverArtwork)
 	}
-	if (typeof raw.explicit == 'boolean') podcast.explicit = raw.explicit 
+	if (typeof raw.explicit == 'boolean') podcast.explicit = raw.explicit
 	if (raw.episodes) podcast.episodes = raw.episodes.map((e) => parseEpisode(e))
 
 	return podcast

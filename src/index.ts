@@ -1,4 +1,11 @@
-import { ItemType, GetByUrlResponse, SearchResults, Streamer, StreamerWithLogin, StreamerAccount } from './types.js'
+import {
+	ItemType,
+	GetByUrlResponse,
+	SearchResults,
+	Streamer,
+	StreamerWithLogin,
+	StreamerAccount
+} from './types.js'
 
 interface LucidaOptions {
 	modules: { [key: string]: Streamer | StreamerWithLogin }
@@ -41,8 +48,8 @@ class Lucida {
 	async checkAccounts(): Promise<{ [key: string]: StreamerAccount }> {
 		const results = await Promise.all(
 			Object.values(this.modules).map(async (e) => {
-				if (e.getAccountInfo) return (await e.getAccountInfo())
-				else return {valid: false}
+				if (e.getAccountInfo) return await e.getAccountInfo()
+				else return { valid: false }
 			})
 		)
 		const moduleNames = Object.keys(this.modules)
