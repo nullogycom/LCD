@@ -105,7 +105,7 @@ export function parseTrack(raw: RawTrack): Track {
 		album: parseAlbum(raw.album)
 	}
 	if (raw.producers) track.producers = raw.producers
-	if (raw.composers) track.composers = raw.composers
+	if (raw.composers && raw.composers[0] != 'Not Documented') track.composers = raw.composers
 	if (raw.lyricists) track.lyricists = raw.lyricists
 	if (raw.isrc) track.isrc = raw.isrc
 	if (raw.copyright) track.copyright = raw.copyright

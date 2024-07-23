@@ -138,6 +138,8 @@ export default class Soundcloud implements Streamer {
 		const type = await this.getTypeFromUrl(url)
 		const client = this.client || (await this.#getClient())
 
+		url = url.replace('//m.', '//')
+
 		// getting the IDs and track authorization
 		const html = await (await fetch(url, { method: 'get', headers: headers() })).text()
 

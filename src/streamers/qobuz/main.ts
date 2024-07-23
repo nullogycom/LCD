@@ -167,7 +167,7 @@ export default class Qobuz implements StreamerWithLogin {
 			await this.#getSigned('track/getFileUrl', params)
 		)
 		if (trackFileResponse.sample == true)
-			throw new Error(`Could not get non-sample file. Make sure the track isn't download-only.`)
+			throw new Error(`Could not get non-sample file. Make sure the track isn't purchase-only.`)
 		const streamResponse = await fetch(trackFileResponse.url)
 		return {
 			mimeType: trackFileResponse.mime_type,
