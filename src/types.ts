@@ -29,8 +29,8 @@ export interface Album {
 	coverArtwork?: CoverArtwork[]
 	artists?: Artist[]
 	description?: string
-	copyright?: string,
-	label?: string,
+	copyright?: string
+	label?: string
 	genre?: string[]
 	regions?: string[]
 }
@@ -102,7 +102,7 @@ export interface GetStreamResponse {
 export type GetByUrlResponse =
 	| TrackGetByUrlResponse
 	| ArtistGetByUrlResponse
-	| AlbumGetByUrlResponse 
+	| AlbumGetByUrlResponse
 	| EpisodeGetByUrlResponse
 	| PodcastGetByUrlResponse
 
@@ -136,7 +136,7 @@ export interface StreamerAccount {
 	premium?: boolean
 	country?: string
 	explicit?: boolean
-} 
+}
 
 export interface Streamer {
 	hostnames: string[]

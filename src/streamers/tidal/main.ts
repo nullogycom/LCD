@@ -55,7 +55,7 @@ interface SubscriptionData {
 	highestSoundQuality: string
 	premiumAccess: boolean
 	canGetTrial: boolean
-	paymentType: string,
+	paymentType: string
 	paymentOverdue: boolean
 }
 
@@ -95,7 +95,11 @@ export default class Tidal implements Streamer {
 			'User-Agent': 'TIDAL_ANDROID/1039 okhttp/3.14.9'
 		}
 	}
-	async #get(url: string, params: { [key: string]: string | number } = {}, base: string = TIDAL_API_BASE): Promise<unknown> {
+	async #get(
+		url: string,
+		params: { [key: string]: string | number } = {},
+		base: string = TIDAL_API_BASE
+	): Promise<unknown> {
 		if (this.failedAuth) throw new Error(`Last request failed to authorize, get new tokens`)
 		if (Date.now() > this.expires) await this.refresh()
 		if (!this.countryCode) await this.getCountryCode()
@@ -300,7 +304,10 @@ export default class Tidal implements Streamer {
 			tracks: tracksResponse.items.map(parseTrack)
 		}
 	}
-	async #getFileUrl(trackId: number | string, quality = 'HI_RES_LOSSLESS'): Promise<GetStreamResponse> {
+	async #getFileUrl(
+		trackId: number | string,
+		quality = 'HI_RES_LOSSLESS'
+	): Promise<GetStreamResponse> {
 		interface PlaybackInfo {
 			manifest: string
 			manifestMimeType: string
@@ -413,7 +420,9 @@ export default class Tidal implements Streamer {
 	}
 	async getAccountInfo(): Promise<StreamerAccount> {
 		if (!this.userId) await this.getCountryCode()
-		const subscription = <SubscriptionData>await this.#get(`users/${this.userId}/subscription`, {}, TIDAL_SUBSCRIPTION_BASE)
+		const subscription = <SubscriptionData>(
+			await this.#get(`users/${this.userId}/subscription`, {}, TIDAL_SUBSCRIPTION_BASE)
+		)
 
 		return {
 			valid: true,

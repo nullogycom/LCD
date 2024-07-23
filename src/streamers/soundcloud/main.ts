@@ -84,7 +84,7 @@ export default class Soundcloud implements Streamer {
 			else if (resultResponse.collection[i].kind == 'playlist')
 				items.albums.push(await parseAlbum(<RawAlbum>resultResponse.collection[i]))
 			else if (resultResponse.collection[i].kind == 'user')
-				items.artists.push((await parseArtist(<RawArtist>resultResponse.collection[i])))
+				items.artists.push(await parseArtist(<RawArtist>resultResponse.collection[i]))
 		}
 
 		return items
@@ -145,21 +145,18 @@ export default class Soundcloud implements Streamer {
 
 		switch (type) {
 			case 'track': {
-				const trackId = html
-					.split(`"soundcloud://sounds:`)?.[1]
-					?.split(`">`)?.[0]
-					
+				const trackId = html.split(`"soundcloud://sounds:`)?.[1]?.split(`">`)?.[0]
 
 				let naked = `https://api-v2.soundcloud.com/tracks/${trackId}`
-				let path = new URL(url).pathname 
+				const path = new URL(url).pathname
 				if (path.split('/').length == 4) naked = `${naked}?secret_token=${path.split('/')[3]}`
 
 				const api = JSON.parse(
 					await (
-						await fetch(
-							this.#formatURL(naked, client),
-							{ method: 'get', headers: headers(this.oauthToken) }
-						)
+						await fetch(this.#formatURL(naked, client), {
+							method: 'get',
+							headers: headers(this.oauthToken)
+						})
 					).text()
 				)
 
@@ -217,11 +214,11 @@ export default class Soundcloud implements Streamer {
 
 				return {
 					type: 'artist',
-					metadata: (await parseArtist(data))
+					metadata: await parseArtist(data)
 				}
 			}
 			default:
-				throw(`Type "${type}" not supported.`)
+				throw `Type "${type}" not supported.`
 		}
 	}
 	async #getRawTrackInfo(id: number | string, client: ScClient) {
@@ -234,16 +231,17 @@ export default class Soundcloud implements Streamer {
 			).text()
 		)
 
-		return {...api, id}
+		return { ...api, id }
 	}
 	async getAccountInfo(): Promise<StreamerAccount> {
-		const track = <TrackGetByUrlResponse>await this.getByUrl('https://soundcloud.com/ween/polka-dot-tail')
+		const track = <TrackGetByUrlResponse>(
+			await this.getByUrl('https://soundcloud.com/ween/polka-dot-tail')
+		)
 		const stream = await track.getStream()
 		if (stream.mimeType.startsWith('audio/mp4')) {
 			stream.stream.unpipe()
-			return {valid: true, premium: true, explicit: true}
-		}
-		else return {valid: true, premium: false, explicit: true}
+			return { valid: true, premium: true, explicit: true }
+		} else return { valid: true, premium: false, explicit: true }
 	}
 }
 
@@ -279,11 +277,11 @@ async function getStream(
 ): Promise<GetStreamResponse> {
 	let filter = transcodings.filter((x) => x.quality == 'hq')
 	if (hq == true && filter.length == 0) throw new Error('Could not find HQ format.')
-	
-	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('aac_')) 	// prioritize aac (go+)
-	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('mp3_')) 	// then mp3
+
+	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('aac_')) // prioritize aac (go+)
+	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('mp3_')) // then mp3
 	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('opus_')) // then opus
-	if (filter.length == 0) throw new Error('Could not find applicable format.')							// and this is just in case none of those exist
+	if (filter.length == 0) throw new Error('Could not find applicable format.') // and this is just in case none of those exist
 
 	const transcoding = filter[0]
 	const streamUrlResp = await fetch(
@@ -307,7 +305,7 @@ async function getStream(
 
 		return {
 			mimeType: transcoding.format.mime_type,
-			stream: (await parseHls(json.url, container))
+			stream: await parseHls(json.url, container)
 		}
 	}
 }

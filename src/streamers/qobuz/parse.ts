@@ -49,12 +49,12 @@ export interface RawAlbum {
 	upc: string
 	released_at: number
 	label?: {
-		name: string,
+		name: string
 		id: number
-	},
+	}
 	genre?: {
-		name: string,
-		id: number,
+		name: string
+		id: number
 		slug: string
 	}
 	copyright: string
@@ -102,9 +102,9 @@ export interface RawTrack {
 	album?: RawAlbum
 	track_number?: number
 	media_number?: number
-	duration: number,
+	duration: number
 	parental_warning: boolean
-	isrc: string,
+	isrc: string
 	performers?: string
 }
 

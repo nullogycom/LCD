@@ -67,7 +67,7 @@ export async function parseAlbum(raw: RawAlbum): Promise<Album> {
 		url: raw.permalink_url,
 		trackCount: raw.track_count,
 		releaseDate: new Date(raw.release_date),
-		artists: [(await parseArtist(raw.user))]
+		artists: [await parseArtist(raw.user)]
 	}
 	if (raw.tracks?.[0]?.artwork_url != undefined) {
 		album.coverArtwork = [await parseCoverArtwork(raw?.tracks?.[0]?.artwork_url)]
@@ -82,13 +82,13 @@ export interface RawTrack {
 	kind: 'track'
 	id: number | string
 	title: string
-	duration: number,
-	created_at: string,
-	full_duration: number,
+	duration: number
+	created_at: string
+	full_duration: number
 	permalink_url: string
-	artwork_url?: string,
-	user: RawArtist,
-	last_modified: string,
+	artwork_url?: string
+	user: RawArtist
+	last_modified: string
 	description: string
 	user_id: number | string
 }
@@ -98,21 +98,22 @@ export async function parseTrack(raw: RawTrack): Promise<Track> {
 		id: raw.id,
 		title: raw.title,
 		url: raw.permalink_url,
-		artists: [(await parseArtist(raw.user))],
-		durationMs: (raw.full_duration || raw.media?.transcodings?.[0]?.duration),
+		artists: [await parseArtist(raw.user)],
+		durationMs: raw.full_duration || raw.media?.transcodings?.[0]?.duration,
 		releaseDate: new Date(raw.created_at),
 		description: raw.description
 	}
 
-	if (raw?.artwork_url != undefined) track.coverArtwork = [await parseCoverArtwork(raw?.artwork_url)]
+	if (raw?.artwork_url != undefined)
+		track.coverArtwork = [await parseCoverArtwork(raw?.artwork_url)]
 
 	return track
 }
 
 export async function parseHls(url: string, container: string): Promise<NodeJS.ReadableStream> {
-	return new Promise(async function(resolve, reject) {
-		const folder = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'lucida'))
+	const folder = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'lucida'))
 
+	return new Promise(function (resolve, reject) {
 		const ffmpegProc = spawn('ffmpeg', [
 			'-hide_banner',
 			'-loglevel',
@@ -128,13 +129,13 @@ export async function parseHls(url: string, container: string): Promise<NodeJS.R
 
 		let err: string
 
-		ffmpegProc.stderr.on('data', function(data) {
+		ffmpegProc.stderr.on('data', function (data) {
 			err = data.toString()
 		})
-		
-		ffmpegProc.once('exit', function(code) {
+
+		ffmpegProc.once('exit', function (code) {
 			if (code == 0) resolve(fs.createReadStream(`${folder}/hls.${container}`))
-			else reject((`FFMPEG HLS error: ${err}` || 'FFMPEG could not parse the HLS.'))
+			else reject(`FFMPEG HLS error: ${err}` || 'FFMPEG could not parse the HLS.')
 		})
 	})
 }

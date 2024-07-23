@@ -33,7 +33,7 @@ interface LoginResponse {
 		id: number
 		display_name: string
 		language_code: string
-		zone: string,
+		zone: string
 		store: string
 		country: string
 		creation_date: string
@@ -272,8 +272,12 @@ export default class Qobuz implements StreamerWithLogin {
 		}
 	}
 	async getAccountInfo(): Promise<StreamerAccount> {
-		const loginResponse = <LoginResponse>await this.#getSigned('user/login', {extra: 'partner', device_manufacturer_id: 'undefined', app_id: this.appId})
-	
+		const loginResponse = <LoginResponse>await this.#getSigned('user/login', {
+			extra: 'partner',
+			device_manufacturer_id: 'undefined',
+			app_id: this.appId
+		})
+
 		return {
 			valid: true,
 			premium: loginResponse.user.credential.parameters.hires_streaming,

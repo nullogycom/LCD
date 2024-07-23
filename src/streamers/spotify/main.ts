@@ -1,6 +1,12 @@
 import Librespot, { LibrespotOptions } from 'librespot'
 import { parseArtist, parseAlbum, parseTrack, parseEpisode, parsePodcast } from './parse.js'
-import { GetByUrlResponse, ItemType, SearchResults, StreamerAccount, StreamerWithLogin } from '../../types.js'
+import {
+	GetByUrlResponse,
+	ItemType,
+	SearchResults,
+	StreamerAccount,
+	StreamerWithLogin
+} from '../../types.js'
 
 class Spotify implements StreamerWithLogin {
 	client: Librespot
@@ -15,7 +21,13 @@ class Spotify implements StreamerWithLogin {
 		const urlObj = new URL(url)
 		const parts = urlObj.pathname.slice(1).split('/')
 		if (parts.length > 2) throw new Error('Unknown Spotify URL')
-		if (parts[0] != 'artist' && parts[0] != 'track' && parts[0] != 'album' && parts[0] != 'show' && parts[0] != 'episode') {
+		if (
+			parts[0] != 'artist' &&
+			parts[0] != 'track' &&
+			parts[0] != 'album' &&
+			parts[0] != 'show' &&
+			parts[0] != 'episode'
+		) {
 			throw new Error(`Spotify type "${parts[0]}" unsupported`)
 		}
 		if (!parts[1]) throw new Error('Unknown Spotify URL')
@@ -63,7 +75,7 @@ class Spotify implements StreamerWithLogin {
 				if (tracks) {
 					return {
 						type,
-						metadata: {...parseAlbum(metadata), trackCount: tracks.length},
+						metadata: { ...parseAlbum(metadata), trackCount: tracks.length },
 						tracks: tracks?.map((e) => parseTrack(e)) ?? []
 					}
 				}
@@ -93,7 +105,7 @@ class Spotify implements StreamerWithLogin {
 				return {
 					type: 'podcast',
 					metadata: parsePodcast(metadata),
-					episodes: (metadata.episodes?.map((e) => parseEpisode(e))) ?? []
+					episodes: metadata.episodes?.map((e) => parseEpisode(e)) ?? []
 				}
 			}
 		}
@@ -116,7 +128,7 @@ class Spotify implements StreamerWithLogin {
 
 		return {
 			valid: true,
-			premium, 
+			premium,
 			country: info.country,
 			explicit: info.allowExplicit
 		}
