@@ -152,16 +152,15 @@ export default class Deezer implements StreamerWithLogin {
 	}
 
 	async login(username: string, password: string): Promise<void> {
-		if (this.arl) {
-			await this.#loginViaArl(this.arl)
-		} else {
+		if (this.arl) await this.#loginViaArl(this.arl)
+		else {
 			const resp = await fetch('https://www.deezer.com/', { headers: this.headers })
 			const setCookie = resp.headers.get('Set-Cookie') ?? ''
 			const sid = setCookie.match(/sid=(fr[0-9a-f]+)/)![1]
 			this.headers['Cookie'] = `sid=${sid}`
-	
+
 			password = this.#md5(password)
-	
+
 			const loginReq = await fetch(
 				`https://connect.deezer.com/oauth/user_auth.php?${new URLSearchParams({
 					app_id: CLIENT_ID,
@@ -172,9 +171,9 @@ export default class Deezer implements StreamerWithLogin {
 				{ headers: this.headers }
 			)
 			const { error } = <DeezerLoginResponse>await loginReq.json()
-	
+
 			if (error) throw new Error('Error while getting access token, check your credentials')
-	
+
 			const arl = await this.#apiCall('user.getArl')
 			await this.#loginViaArl(arl)
 		}
