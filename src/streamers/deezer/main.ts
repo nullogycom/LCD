@@ -82,7 +82,7 @@ export default class Deezer implements StreamerWithLogin {
 		let apiToken = this.apiToken
 		if (method == 'deezer.getUserData' || method == 'user.getArl') apiToken = ''
 
-		let url = `${GW_LIGHT_URL}?${new URLSearchParams({
+		const url = `${GW_LIGHT_URL}?${new URLSearchParams({
 			method,
 			input: '3',
 			api_version: '1.0',
@@ -90,12 +90,12 @@ export default class Deezer implements StreamerWithLogin {
 			cid: Math.floor(Math.random() * 1e9).toString()
 		})}`
 
-		let body = data ? JSON.stringify(data) : undefined
-		let req = await fetch(url, { method: 'POST', body, headers: this.headers })
-		let { results: res, error, payload } = (await req.json()) as any
+		const body = data ? JSON.stringify(data) : undefined
+		const req = await fetch(url, { method: 'POST', body, headers: this.headers })
+		const { results: res, error, payload } = (await req.json()) as any
 
 		if (error.constructor.name == 'Object') {
-			let [type, msg] = Object.entries(error)[0]
+			const [type, msg] = Object.entries(error)[0]
 			throw new Error(`API Error: ${type}\n${msg}\n\nPayload: ${payload}`)
 		}
 
@@ -123,7 +123,7 @@ export default class Deezer implements StreamerWithLogin {
 	async #loginViaArl(arl: string) {
 		this.arl = arl
 		this.headers['Cookie'] = `arl=${arl}`
-		let userData = await this.#apiCall('deezer.getUserData')
+		const userData = await this.#apiCall('deezer.getUserData')
 
 		if (userData.USER.USER_ID == 0) {
 			delete this.headers['Cookie']
@@ -150,7 +150,7 @@ export default class Deezer implements StreamerWithLogin {
 
 		password = this.#md5(password)
 
-		let loginReq = await fetch(
+		const loginReq = await fetch(
 			`https://connect.deezer.com/oauth/user_auth.php?${new URLSearchParams({
 				app_id: CLIENT_ID,
 				login: username,
@@ -163,7 +163,7 @@ export default class Deezer implements StreamerWithLogin {
 
 		if (error) throw new Error('Error while getting access token, check your credentials')
 
-		let arl = await this.#apiCall('user.getArl')
+		const arl = await this.#apiCall('user.getArl')
 
 		await this.#loginViaArl(arl)
 	}
@@ -171,19 +171,19 @@ export default class Deezer implements StreamerWithLogin {
 	/* ---------- SEARCH ---------- */
 
 	async search(query: string, limit: number): Promise<SearchResults> {
-		let results = await Promise.all([
+		const results = await Promise.all([
 			this.#searchArtists(query, limit),
 			this.#searchAlbums(query, limit),
 			this.#searchTracks(query, limit)
 		])
 
-		let [artists, albums, tracks] = results
+		const [artists, albums, tracks] = results
 
 		return { query, albums, tracks, artists }
 	}
 
 	async #searchArtists(query: string, limit: number): Promise<Artist[]> {
-		let { data } = await this.#apiCall('search.music', {
+		const { data } = await this.#apiCall('search.music', {
 			query,
 			start: 0,
 			nb: limit,
@@ -194,7 +194,7 @@ export default class Deezer implements StreamerWithLogin {
 	}
 
 	async #searchAlbums(query: string, limit: number): Promise<Album[]> {
-		let { data } = await this.#apiCall('search.music', {
+		const { data } = await this.#apiCall('search.music', {
 			query,
 			start: 0,
 			nb: limit,
@@ -205,7 +205,7 @@ export default class Deezer implements StreamerWithLogin {
 	}
 
 	async #searchTracks(query: string, limit: number): Promise<Track[]> {
-		let { data } = await this.#apiCall('search.music', {
+		const { data } = await this.#apiCall('search.music', {
 			query,
 			start: 0,
 			nb: limit,
@@ -218,8 +218,8 @@ export default class Deezer implements StreamerWithLogin {
 	/* ---------- GET INFO FROM URL ---------- */
 
 	async #unshortenUrl(url: URL): Promise<URL> {
-		let res = await fetch(url, { redirect: 'manual' })
-		let location = res.headers.get('Location')
+		const res = await fetch(url, { redirect: 'manual' })
+		const location = res.headers.get('Location')
 
 		if (res.status != 302 || !location) throw new Error('URL not supported')
 
@@ -229,17 +229,17 @@ export default class Deezer implements StreamerWithLogin {
 	async #getInfoFromUrl(url: URL): Promise<{ type: ItemType; id: number }> {
 		if (url.hostname == 'deezer.page.link') url = await this.#unshortenUrl(url)
 
-		let match = url.pathname.match(/^\/(?:[a-z]{2}\/)?(track|album|artist)\/(\d+)\/?$/)
+		const match = url.pathname.match(/^\/(?:[a-z]{2}\/)?(track|album|artist)\/(\d+)\/?$/)
 		if (!match) throw new Error('URL not supported')
 
-		let [, type, id] = match
+		const [, type, id] = match
 
 		return { type: <ItemType>type, id: parseInt(id) }
 	}
 
 	async getTypeFromUrl(url: string): Promise<ItemType> {
-		let urlObj = new URL(url)
-		let { type } = await this.#getInfoFromUrl(urlObj)
+		const urlObj = new URL(url)
+		const { type } = await this.#getInfoFromUrl(urlObj)
 		return type
 	}
 
@@ -248,7 +248,7 @@ export default class Deezer implements StreamerWithLogin {
 	// Artist
 
 	async #getArtist(id: number): Promise<Artist> {
-		let { DATA, TOP, ALBUMS } = await this.#apiCall('deezer.pageArtist', {
+		const { DATA, TOP, ALBUMS } = await this.#apiCall('deezer.pageArtist', {
 			art_id: id,
 			lang: 'en'
 		})
@@ -259,7 +259,7 @@ export default class Deezer implements StreamerWithLogin {
 	// Album
 
 	async #getAlbum(id: number): Promise<{ metadata: Album; tracks: Track[] }> {
-		let { DATA, SONGS } = await this.#apiCall('deezer.pageAlbum', {
+		const { DATA, SONGS } = await this.#apiCall('deezer.pageAlbum', {
 			alb_id: id,
 			lang: 'en'
 		})
@@ -338,7 +338,7 @@ export default class Deezer implements StreamerWithLogin {
 				const chunk = <Buffer>c
 				let chunkBytesRead = 0
 				while (chunkBytesRead != chunk.length) {
-					let slice = chunk.subarray(
+					const slice = chunk.subarray(
 						chunkBytesRead,
 						chunkBytesRead + (chunkSize - (bufSize % chunkSize))
 					)
@@ -401,7 +401,7 @@ export default class Deezer implements StreamerWithLogin {
 				})
 			).TRACK_TOKEN
 
-		let req = await fetch('https://media.deezer.com/v1/get_url', {
+		const req = await fetch('https://media.deezer.com/v1/get_url', {
 			method: 'POST',
 			body: JSON.stringify({
 				license_token: this.licenseToken,
@@ -414,7 +414,7 @@ export default class Deezer implements StreamerWithLogin {
 				track_tokens: [trackToken]
 			})
 		})
-		let res = (await req.json()) as any
+		const res = (await req.json()) as any
 
 		return res.data[0].media[0].sources[0].url
 	}
@@ -430,22 +430,24 @@ export default class Deezer implements StreamerWithLogin {
 		return key
 	}
 
-	async getByUrl(url: string, limit?: number | undefined): Promise<GetByUrlResponse> {
-		let { type, id } = await this.#getInfoFromUrl(new URL(url))
+	async getByUrl(url: string): Promise<GetByUrlResponse> {
+		const { type, id } = await this.#getInfoFromUrl(new URL(url))
 
 		switch (type) {
-			case 'artist':
+			case 'artist': {
 				return {
 					type: 'artist',
 					metadata: await this.#getArtist(id)
 				}
-			case 'album':
+			}
+			case 'album': {
 				return {
 					type: 'album',
 					...(await this.#getAlbum(id))
 				}
-			case 'track':
-				let track = await this.#getTrackData(id)
+			}
+			case 'track': {
+				const track = await this.#getTrackData(id)
 				return {
 					type: 'track',
 					metadata: parseTrack(track),
@@ -453,6 +455,7 @@ export default class Deezer implements StreamerWithLogin {
 						return this.#getStream(track)
 					}
 				}
+			}
 			default:
 				throw new Error('URL unrecognised')
 		}
