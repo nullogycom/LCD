@@ -8,40 +8,46 @@ export enum DeezerFormat {
 }
 
 export interface DeezerLoginResponse {
-    error?: {
-        type: string
-        message: string
-    }
+	error?: {
+		type: string
+		message: string
+	}
 }
 
 export interface DeezerMediaResponse {
-    data: [{
-        media: [{
-            sources: [{
-                url: string
-            }]
-        }]
-    }]
+	data: [
+		{
+			media: [
+				{
+					sources: [
+						{
+							url: string
+						}
+					]
+				}
+			]
+		}
+	]
 }
 
 export interface DeezerUserData {
 	USER: {
 		USER_ID: number
 		EXPLICIT_CONTENT_LEVEL: string
-        OPTIONS: {
-            license_token: string
-            web_hq: boolean
-            web_lossless: boolean
-        }
-        SETTING: {
-            global: {
-                language: string
-            }
-        }
+		OPTIONS: {
+			license_token: string
+			web_hq: boolean
+			web_lossless: boolean
+		}
+		SETTING: {
+			global: {
+				language: string
+			}
+		}
 	}
 	OFFER_ID: number
 	COUNTRY: string
-    checkForm: string
+	checkForm: string
 }
 
 export interface DeezerArtist {

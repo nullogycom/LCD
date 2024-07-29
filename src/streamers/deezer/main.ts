@@ -80,7 +80,10 @@ export default class Deezer implements StreamerWithLogin {
 		if (options?.arl) this.#loginViaArl(options.arl)
 	}
 
-	async #apiCall<T extends keyof APIMethod>(method: T, data: { [key: string]: string | number | string[] } = {}): Promise<APIMethod[T]> {
+	async #apiCall<T extends keyof APIMethod>(
+		method: T,
+		data: { [key: string]: string | number | string[] } = {}
+	): Promise<APIMethod[T]> {
 		let apiToken = this.apiToken
 		if (method == 'deezer.getUserData' || method == 'user.getArl') apiToken = ''
 
@@ -92,10 +95,10 @@ export default class Deezer implements StreamerWithLogin {
 			cid: Math.floor(Math.random() * 1e9).toString()
 		})}`
 
-        interface DeezerResponse {
-            results: APIMethod[T];
-            error: number[] | { [key: string]: string }
-        }
+		interface DeezerResponse {
+			results: APIMethod[T]
+			error: number[] | { [key: string]: string }
+		}
 
 		const body = JSON.stringify(data)
 		const req = await fetch(url, { method: 'POST', body, headers: this.headers })
@@ -111,7 +114,7 @@ export default class Deezer implements StreamerWithLogin {
 			const sid = setCookie.match(/sid=(fr[0-9a-f]+)/)![1]
 			this.headers['Cookie'] += `arl=${this.arl}; sid=${sid}`
 
-            const res = <APIMethod['deezer.getUserData']>results
+			const res = <APIMethod['deezer.getUserData']>results
 
 			this.apiToken = res.checkForm
 			this.licenseToken = res.USER?.OPTIONS?.license_token
