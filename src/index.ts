@@ -30,11 +30,11 @@ class Lucida {
 	}
 	async login() {
 		if (!this.logins) throw new Error('No logins specified')
-		for (const i in this.logins) {
+		for (const i in this.modules) {
 			const credentials = this.logins[i]
 			const module = this.modules[i]
 			if (module && 'login' in module) {
-				await module.login?.(credentials.username, credentials.password)
+				await module.login?.(credentials?.username, credentials?.password)
 			}
 		}
 	}

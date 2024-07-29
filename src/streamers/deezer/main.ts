@@ -77,7 +77,7 @@ export default class Deezer implements StreamerWithLogin {
 	availableFormats: Set<DeezerFormat> = new Set()
 
 	constructor(options?: DeezerOptions) {
-		if (options?.arl) this.#loginViaArl(options.arl)
+		if (options?.arl) this.arl = options.arl
 	}
 
 	async #apiCall<T extends keyof APIMethod>(
@@ -106,6 +106,7 @@ export default class Deezer implements StreamerWithLogin {
 
 		if (error.constructor.name == 'Object') {
 			const [type, msg] = Object.entries(error)[0]
+			if (type == 'VALID_TOKEN_REQUIRED') throw new Error('Invalid ARL')
 			throw new Error(`API Error: ${type}\n${msg}`)
 		}
 
@@ -152,32 +153,31 @@ export default class Deezer implements StreamerWithLogin {
 
 	async login(username: string, password: string): Promise<void> {
 		if (this.arl) {
-			return
+			await this.#loginViaArl(this.arl)
+		} else {
+			const resp = await fetch('https://www.deezer.com/', { headers: this.headers })
+			const setCookie = resp.headers.get('Set-Cookie') ?? ''
+			const sid = setCookie.match(/sid=(fr[0-9a-f]+)/)![1]
+			this.headers['Cookie'] = `sid=${sid}`
+	
+			password = this.#md5(password)
+	
+			const loginReq = await fetch(
+				`https://connect.deezer.com/oauth/user_auth.php?${new URLSearchParams({
+					app_id: CLIENT_ID,
+					login: username,
+					password,
+					hash: this.#md5(CLIENT_ID + username + password + CLIENT_SECRET)
+				})}`,
+				{ headers: this.headers }
+			)
+			const { error } = <DeezerLoginResponse>await loginReq.json()
+	
+			if (error) throw new Error('Error while getting access token, check your credentials')
+	
+			const arl = await this.#apiCall('user.getArl')
+			await this.#loginViaArl(arl)
 		}
-
-		const resp = await fetch('https://www.deezer.com/', { headers: this.headers })
-		const setCookie = resp.headers.get('Set-Cookie') ?? ''
-		const sid = setCookie.match(/sid=(fr[0-9a-f]+)/)![1]
-		this.headers['Cookie'] = `sid=${sid}`
-
-		password = this.#md5(password)
-
-		const loginReq = await fetch(
-			`https://connect.deezer.com/oauth/user_auth.php?${new URLSearchParams({
-				app_id: CLIENT_ID,
-				login: username,
-				password,
-				hash: this.#md5(CLIENT_ID + username + password + CLIENT_SECRET)
-			})}`,
-			{ headers: this.headers }
-		)
-		const { error } = <DeezerLoginResponse>await loginReq.json()
-
-		if (error) throw new Error('Error while getting access token, check your credentials')
-
-		const arl = await this.#apiCall('user.getArl')
-
-		await this.#loginViaArl(arl)
 	}
 
 	/* ---------- SEARCH ---------- */
