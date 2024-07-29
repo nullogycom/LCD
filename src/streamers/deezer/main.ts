@@ -16,6 +16,8 @@ import {
 	DeezerAlbum,
 	DeezerArtist,
 	DeezerFormat,
+	DeezerLoginResponse,
+	DeezerMediaResponse,
 	DeezerTrack,
 	DeezerUserData,
 	parseAlbum,
@@ -78,7 +80,7 @@ export default class Deezer implements StreamerWithLogin {
 		if (options?.arl) this.#loginViaArl(options.arl)
 	}
 
-	async #apiCall<T extends keyof APIMethod>(method: T, data?: any): Promise<APIMethod[T]> {
+	async #apiCall<T extends keyof APIMethod>(method: T, data: { [key: string]: string | number | string[] } = {}): Promise<APIMethod[T]> {
 		let apiToken = this.apiToken
 		if (method == 'deezer.getUserData' || method == 'user.getArl') apiToken = ''
 
@@ -90,13 +92,18 @@ export default class Deezer implements StreamerWithLogin {
 			cid: Math.floor(Math.random() * 1e9).toString()
 		})}`
 
-		const body = data ? JSON.stringify(data) : undefined
+        interface DeezerResponse {
+            results: APIMethod[T];
+            error: number[] | { [key: string]: string }
+        }
+
+		const body = JSON.stringify(data)
 		const req = await fetch(url, { method: 'POST', body, headers: this.headers })
-		const { results: res, error, payload } = (await req.json()) as any
+		const { results, error } = <DeezerResponse>await req.json()
 
 		if (error.constructor.name == 'Object') {
 			const [type, msg] = Object.entries(error)[0]
-			throw new Error(`API Error: ${type}\n${msg}\n\nPayload: ${payload}`)
+			throw new Error(`API Error: ${type}\n${msg}`)
 		}
 
 		if (method == 'deezer.getUserData') {
@@ -104,8 +111,10 @@ export default class Deezer implements StreamerWithLogin {
 			const sid = setCookie.match(/sid=(fr[0-9a-f]+)/)![1]
 			this.headers['Cookie'] += `arl=${this.arl}; sid=${sid}`
 
-			this.apiToken = res?.checkForm
-			this.licenseToken = res?.USER?.OPTIONS?.license_token
+            const res = <APIMethod['deezer.getUserData']>results
+
+			this.apiToken = res.checkForm
+			this.licenseToken = res.USER?.OPTIONS?.license_token
 
 			this.country = res?.COUNTRY
 			this.language = res?.USER?.SETTING?.global?.language
@@ -117,7 +126,7 @@ export default class Deezer implements StreamerWithLogin {
 			this.renewTimestamp = Date.now()
 		}
 
-		return res
+		return results
 	}
 
 	async #loginViaArl(arl: string) {
@@ -159,7 +168,7 @@ export default class Deezer implements StreamerWithLogin {
 			})}`,
 			{ headers: this.headers }
 		)
-		const { error } = (await loginReq.json()) as any
+		const { error } = <DeezerLoginResponse>await loginReq.json()
 
 		if (error) throw new Error('Error while getting access token, check your credentials')
 
@@ -414,7 +423,7 @@ export default class Deezer implements StreamerWithLogin {
 				track_tokens: [trackToken]
 			})
 		})
-		const res = (await req.json()) as any
+		const res = <DeezerMediaResponse>await req.json()
 
 		return res.data[0].media[0].sources[0].url
 	}
