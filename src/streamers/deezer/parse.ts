@@ -91,18 +91,27 @@ export interface DeezerAlbum {
 	ARTISTS?: DeezerArtist[]
 	ORIGINAL_RELEASE_DATE?: string
 	NUMBER_TRACK?: string
+	COPYRIGHT?: string
+	UPC?: string
+	LABEL_NAME?: string
 }
 
 export function parseAlbum(album: DeezerAlbum): Album {
-	return {
+	const data: Album = {
 		title: album.ALB_TITLE,
 		id: album.ALB_ID,
 		url: `https://www.deezer.com/album/${album.ALB_ID}`,
 		trackCount: album.NUMBER_TRACK ? parseInt(album.NUMBER_TRACK) : undefined,
 		releaseDate: album.ORIGINAL_RELEASE_DATE ? new Date(album.ORIGINAL_RELEASE_DATE) : undefined,
 		coverArtwork: parseArtwork(album.ALB_PICTURE),
-		artists: album.ARTISTS ? album.ARTISTS.map((a) => parseArtist(a)) : undefined
+		artists: album.ARTISTS ? album.ARTISTS.map((a) => parseArtist(a)) : undefined,
+		label: album.LABEL_NAME
 	}
+
+	if (album.COPYRIGHT) data.copyright = album.COPYRIGHT
+	if (album.UPC) data.upc = album.UPC
+
+	return data
 }
 
 export interface DeezerTrack {
@@ -118,7 +127,7 @@ export interface DeezerTrack {
 	ALB_TITLE: string
 	ALB_PICTURE: string
 	DURATION: string
-	AVAILABLE_COUNTRIES: { STREAM_ADS: string }
+	AVAILABLE_COUNTRIES?: { STREAM_ADS?: string }
 	COPYRIGHT: string
 
 	TRACK_TOKEN: string
@@ -133,6 +142,14 @@ export interface DeezerTrack {
 }
 
 export function parseTrack(track: DeezerTrack): Track {
+	let addt: {regions?: string[], copyright?: string, producers?: string[], composers?: string[], lyricists?: string[]} = {}
+
+	if (track?.AVAILABLE_COUNTRIES?.STREAM_ADS) addt.regions = [...track.AVAILABLE_COUNTRIES.STREAM_ADS]
+	if (track?.COPYRIGHT) addt.copyright = track.COPYRIGHT
+	if (track.SNG_CONTRIBUTORS?.producer) addt.producers = track.SNG_CONTRIBUTORS?.producer
+	if (track.SNG_CONTRIBUTORS?.composer) addt.composers = track.SNG_CONTRIBUTORS?.composer
+	if (track.SNG_CONTRIBUTORS?.composer) addt.lyricists = track.SNG_CONTRIBUTORS?.lyricist
+
 	return {
 		title: track.SNG_TITLE,
 		id: track.SNG_ID,
@@ -140,19 +157,16 @@ export function parseTrack(track: DeezerTrack): Track {
 		explicit: track.EXPLICIT_LYRICS == '1',
 		trackNumber: parseInt(track.TRACK_NUMBER),
 		discNumber: parseInt(track.DISK_NUMBER),
-		copyright: track.COPYRIGHT,
 		artists: track.ARTISTS.map((a) => parseArtist(a)),
 		isrc: track.ISRC,
-		producers: track.SNG_CONTRIBUTORS?.producer,
-		composers: track.SNG_CONTRIBUTORS?.composer,
-		lyricists: track.SNG_CONTRIBUTORS?.lyricist,
 		album: parseAlbum({
 			ALB_ID: track.ALB_ID,
 			ALB_PICTURE: track.ALB_PICTURE,
 			ALB_TITLE: track.ALB_TITLE
 		}),
 		durationMs: parseInt(track.DURATION) * 1e3,
-		coverArtwork: parseArtwork(track.ALB_PICTURE)
+		coverArtwork: parseArtwork(track.ALB_PICTURE),
+		...addt
 	}
 }
 

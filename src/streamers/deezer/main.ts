@@ -275,10 +275,14 @@ export default class Deezer implements StreamerWithLogin {
 			lang: 'en'
 		})
 
-		return {
+		const data = {
 			metadata: parseAlbum(DATA),
 			tracks: SONGS.data.map(parseTrack)
 		}
+
+		if (!data.metadata.trackCount) data.metadata.trackCount = data.tracks.length 
+
+		return data
 	}
 
 	// Track
@@ -294,8 +298,8 @@ export default class Deezer implements StreamerWithLogin {
 	async #getStream(track: DeezerTrack): Promise<GetStreamResponse> {
 		if ('FALLBACK' in track) track = track.FALLBACK!
 
-		const countries = track.AVAILABLE_COUNTRIES.STREAM_ADS
-		if (!countries.length) throw new Error('Track not available in any country')
+		const countries = track?.AVAILABLE_COUNTRIES?.STREAM_ADS
+		if (!countries?.length) throw new Error('Track not available in any country')
 		if (!countries.includes(this.country!))
 			throw new Error("Track not available in the account's country")
 
