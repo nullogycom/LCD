@@ -42,6 +42,8 @@ interface LoginData {
 interface SessionData {
 	countryCode: string
 	userId: number
+	status?: number
+	userMessage?: string
 }
 
 interface SubscriptionData {
@@ -419,7 +421,16 @@ export default class Tidal implements Streamer {
 		}
 	}
 	async getAccountInfo(): Promise<StreamerAccount> {
-		if (!this.userId) await this.getCountryCode()
+		if (this.userId == undefined || this.countryCode == undefined) {
+			if (Date.now() > this.expires) await this.refresh()
+			const sessionResponse = await fetch('https://api.tidal.com/v1/sessions', {
+				headers: this.headers()
+			})
+			const sessionData = <SessionData>await sessionResponse.json()
+
+			this.userId = sessionData.userId 
+			this.countryCode = sessionData.countryCode
+		}
 		const subscription = <SubscriptionData>(
 			await this.#get(`users/${this.userId}/subscription`, {}, TIDAL_SUBSCRIPTION_BASE)
 		)
