@@ -1,4 +1,4 @@
-import fetch from 'node-fetch'
+import { fetch } from 'undici'
 import { spawn } from 'child_process'
 import {
 	ItemType,
@@ -21,7 +21,7 @@ import {
 	parseMpd,
 	parseTrack
 } from './parse.js'
-import Stream from 'stream'
+import Stream, { Readable } from 'stream'
 
 interface TidalOptions {
 	tvToken: string
@@ -354,7 +354,7 @@ export default class Tidal implements Streamer {
 			return {
 				mimeType: manifest.mimeType,
 				sizeBytes: parseInt(<string>streamResponse.headers.get('Content-Length')),
-				stream: <NodeJS.ReadableStream>streamResponse.body
+				stream: Readable.fromWeb(streamResponse.body!)
 			}
 		}
 

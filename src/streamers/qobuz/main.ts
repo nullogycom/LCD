@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import fetch from 'node-fetch'
+import { fetch } from 'undici'
 import {
 	ItemType,
 	StreamerWithLogin,
@@ -11,6 +11,7 @@ import {
 } from '../../types.js'
 import { DEFAULT_HEADERS } from './constants.js'
 import { parseAlbum, parseTrack, parseArtist, RawAlbum, RawArtist, RawTrack } from './parse.js'
+import { Readable } from 'stream'
 
 function headers(token?: string): HeadersInit {
 	const headers: HeadersInit = DEFAULT_HEADERS
@@ -182,7 +183,7 @@ export default class Qobuz implements StreamerWithLogin {
 		return {
 			mimeType: trackFileResponse.mime_type,
 			sizeBytes: parseInt(<string>streamResponse.headers.get('Content-Length')),
-			stream: <NodeJS.ReadableStream>streamResponse.body
+			stream: Readable.fromWeb(streamResponse.body!)
 		}
 	}
 

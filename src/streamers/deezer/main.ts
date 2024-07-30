@@ -1,4 +1,4 @@
-import fetch from 'node-fetch'
+import { fetch } from 'undici'
 import {
 	Album,
 	Artist,
@@ -24,7 +24,7 @@ import {
 	parseArtist,
 	parseTrack
 } from './parse.js'
-import { Transform } from 'stream'
+import { Readable, Transform } from 'stream'
 import { Blowfish } from 'blowfish-cbc'
 
 interface DeezerOptions {
@@ -406,7 +406,7 @@ export default class Deezer implements StreamerWithLogin {
 		})
 
 		return {
-			stream: streamResp.body!.pipe(decryption),
+			stream: Readable.fromWeb(streamResp.body!).pipe(decryption),
 			mimeType
 		}
 	}
