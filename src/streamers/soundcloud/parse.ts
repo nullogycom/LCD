@@ -1,6 +1,6 @@
 import { Artist, Album, Track } from '../../types.js'
 import { spawn } from 'child_process'
-import fetch from 'node-fetch'
+import { fetch } from 'undici'
 import { imageSize as sizeOf } from 'image-size'
 import os from 'node:os'
 import fs from 'node:fs'
@@ -9,11 +9,8 @@ import path from 'node:path'
 async function parseCoverArtwork(url: string) {
 	const resp = await fetch(url)
 	if (!resp.body) throw new Error('No body on image')
-	const chunks = []
-	for await (const chunk of resp.body) {
-		chunks.push(Buffer.from(chunk))
-	}
-	const dimensions = sizeOf(Buffer.concat(chunks))
+	const body = await resp.arrayBuffer()
+	const dimensions = sizeOf(new Uint8Array(body))
 	if (!dimensions.width || !dimensions.height) throw new Error(`Couldn't get dimensions`)
 	return {
 		url,

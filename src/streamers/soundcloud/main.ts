@@ -1,4 +1,4 @@
-import fetch, { HeadersInit } from 'node-fetch'
+import { fetch, HeadersInit } from 'undici'
 import { DEFAULT_HEADERS, SC_VERSION } from './constants.js'
 import {
 	ItemType,
@@ -20,6 +20,7 @@ import {
 	RawArtist,
 	ScClient
 } from './parse.js'
+import { Readable } from 'stream'
 
 function headers(oauthToken?: string | undefined): HeadersInit {
 	const headers: HeadersInit = DEFAULT_HEADERS
@@ -307,8 +308,8 @@ async function getStream(
 		const streamResp = await fetch(json.url)
 		return {
 			mimeType: transcoding.format.mime_type,
-			sizeBytes: parseInt(<string>streamResp.headers.get('Content-Length')),
-			stream: <NodeJS.ReadableStream>streamResp.body
+			sizeBytes: parseInt(streamResp.headers.get('Content-Length')!),
+			stream: Readable.fromWeb(streamResp.body!)
 		}
 	} else {
 		const container = transcoding.format.mime_type.split('/')[1].split(';')[0].split('+')[0]

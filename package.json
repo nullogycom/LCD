@@ -37,7 +37,7 @@
 		"blowfish-cbc": "^1.0.1",
 		"image-size": "^1.1.1",
 		"librespot": "^0.2.4",
-		"node-fetch": "^3.3.2",
+		"undici": "^6.19.4",
 		"xmldom-qsa": "^1.1.3"
 	},
 	"devDependencies": {
