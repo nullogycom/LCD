@@ -70,6 +70,20 @@ export default class Tidal implements Streamer {
 	countryCode: string
 	userId: number | undefined
 	hostnames = ['tidal.com', 'www.tidal.com', 'listen.tidal.com']
+	testData = {
+		'https://tidal.com/browse/artist/3908662': {
+			type: 'artist',
+			title: 'Tyler, The Creator'
+		},
+		'https://tidal.com/browse/album/109485854': {
+			type: 'album',
+			title: 'IGOR'
+		},
+		'https://tidal.com/browse/track/95691774': {
+			type: 'track',
+			title: 'Potato Salad'
+		}
+	} as const
 	failedAuth = false
 	constructor(options: TidalOptions) {
 		this.tvToken = options.tvToken

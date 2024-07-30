@@ -7,6 +7,9 @@
 	"types": "build/index.d.ts",
 	"scripts": {
 		"tsc": "tsc",
+		"build": "tsc",
+		"watch": "tsc -w",
+		"test": "node build/test.js",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"prepare": "husky"
@@ -17,6 +20,7 @@
 			"import": "./build/types.js",
 			"types": "./build/types.d.ts"
 		},
+		"./streamers/*": "./build/streamers/*/main.js",
 		"./streamers/*.js": "./build/streamers/*.js"
 	},
 	"files": [

@@ -11,6 +11,21 @@ import {
 class Spotify implements StreamerWithLogin {
 	client: Librespot
 	hostnames = ['open.spotify.com']
+	testData = {
+		'https://open.spotify.com/track/1jzIJcHCXneHw7ojC6LXiF': {
+			type: 'track',
+			title: 'Potato Salad'
+		},
+		'https://open.spotify.com/album/5zi7WsKlIiUXv09tbGLKsE': {
+			type: 'album',
+			title: 'IGOR'
+		},
+		'https://open.spotify.com/artist/4V8LLVI7PbaPR0K2TGSxFF': {
+			type: 'artist',
+			title: 'Tyler, The Creator'
+		}
+	} as const
+
 	constructor(options: LibrespotOptions) {
 		this.client = new Librespot(options)
 	}

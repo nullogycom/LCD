@@ -45,6 +45,16 @@ interface SoundcloudTranscoding {
 
 export default class Soundcloud implements Streamer {
 	hostnames = ['soundcloud.com', 'm.soundcloud.com', 'www.soundcloud.com']
+	testData = {
+		'https://soundcloud.com/saoirsedream/charlikartlanparty': {
+			type: 'track',
+			title: 'Charli Kart LAN Party'
+		},
+		'https://soundcloud.com/saoirsedream/sets/star': {
+			type: 'album',
+			title: 'star★☆'
+		}
+	} as const
 	oauthToken?: string
 	client?: ScClient
 	constructor(options: SoundcloudOptions) {

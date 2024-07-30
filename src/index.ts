@@ -7,7 +7,7 @@ import {
 	StreamerAccount
 } from './types.js'
 
-interface LucidaOptions {
+export interface LucidaOptions {
 	modules: { [key: string]: Streamer | StreamerWithLogin }
 	logins?: {
 		[key: string]: {
@@ -28,13 +28,24 @@ class Lucida {
 			.flat()
 		if (options.logins) this.logins = options.logins
 	}
-	async login() {
+	async login(ignoreFailures = false) {
 		if (!this.logins) throw new Error('No logins specified')
 		for (const i in this.modules) {
 			const credentials = this.logins[i]
 			const module = this.modules[i]
 			if (module && 'login' in module) {
-				await module.login?.(credentials?.username, credentials?.password)
+				try {
+					await module.login?.(credentials?.username, credentials?.password)
+				} catch (error) {
+					console.error(error)
+					if (!ignoreFailures) {
+						throw new Error(`Failed to login to ${i}`)
+					} else {
+						await module.disconnect?.()
+						console.error(`ignoreFailures is on, removing ${i} module...`)
+						delete this.modules[i]
+					}
+				}
 			}
 		}
 	}

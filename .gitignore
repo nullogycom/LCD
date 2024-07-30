@@ -11,4 +11,7 @@ node_modules
 /tmp
 /run.js
 
+.test-options.json
+.test-results.*
+
 .pnpm-store

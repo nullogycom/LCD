@@ -53,7 +53,20 @@ interface APIMethod {
 
 export default class Deezer implements StreamerWithLogin {
 	hostnames = ['deezer.com', 'www.deezer.com', 'deezer.page.link']
-
+	testData = {
+		'https://www.deezer.com/us/artist/1194083': {
+			type: 'artist',
+			title: 'Tyler, The Creator'
+		},
+		'https://www.deezer.com/us/track/559711712': {
+			type: 'track',
+			title: 'Potato Salad'
+		},
+		'https://www.deezer.com/us/album/97140952': {
+			type: 'album',
+			title: 'IGOR'
+		}
+	} as const
 	headers: { [header: string]: string } = {
 		Accept: '*/*',
 		'User-Agent':

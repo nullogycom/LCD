@@ -52,6 +52,16 @@ interface LoginResponse {
 
 export default class Qobuz implements StreamerWithLogin {
 	hostnames = ['play.qobuz.com', 'open.qobuz.com', 'www.qobuz.com', 'qobuz.com']
+	testData = {
+		'https://www.qobuz.com/us-en/interpreter/tyler-the-creator/589771': {
+			title: 'Tyler, The Creator',
+			type: 'artist'
+		},
+		'https://www.qobuz.com/us-en/album/igor-tyler-the-creator/qtz65tw2of0ha': {
+			title: 'IGOR',
+			type: 'album'
+		}
+	} as const
 	token?: string
 	appSecret: string
 	appId: string

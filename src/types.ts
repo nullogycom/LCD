@@ -138,8 +138,16 @@ export interface StreamerAccount {
 	explicit?: boolean
 }
 
+export interface StreamerTestData {
+	[url: string]: {
+		title: string
+		type: ItemType
+	}
+}
+
 export interface Streamer {
 	hostnames: string[]
+	testData?: StreamerTestData
 	search(query: string, limit: number): Promise<SearchResults>
 	getTypeFromUrl(url: string): Promise<ItemType>
 	getByUrl:
