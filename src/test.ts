@@ -1,5 +1,5 @@
-import Lucida, { LucidaOptions } from 'lucida'
-import { GetByUrlResponse, Streamer } from 'lucida/types'
+import Lucida, { LucidaOptions } from './index.js'
+import { GetByUrlResponse, Streamer } from './types.js'
 
 import fs from 'node:fs'
 
