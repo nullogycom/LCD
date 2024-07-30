@@ -10,3 +10,5 @@ node_modules
 /test.js
 /tmp
 /run.js
+
+.pnpm-store
