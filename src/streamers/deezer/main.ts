@@ -327,7 +327,8 @@ export default class Deezer implements StreamerWithLogin {
 
 		let mimeType = ''
 		switch (format) {
-			case (DeezerFormat.MP3_128, DeezerFormat.MP3_320):
+			case DeezerFormat.MP3_128:
+			case DeezerFormat.MP3_320:
 				mimeType = 'audio/mpeg'
 				break
 			case DeezerFormat.FLAC:
