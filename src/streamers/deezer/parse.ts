@@ -143,9 +143,16 @@ export interface DeezerTrack {
 }
 
 export function parseTrack(track: DeezerTrack): Track {
-	let addt: {regions?: string[], copyright?: string, producers?: string[], composers?: string[], lyricists?: string[]} = {}
+	const addt: {
+		regions?: string[]
+		copyright?: string
+		producers?: string[]
+		composers?: string[]
+		lyricists?: string[]
+	} = {}
 
-	if (track?.AVAILABLE_COUNTRIES?.STREAM_ADS) addt.regions = [...track.AVAILABLE_COUNTRIES.STREAM_ADS]
+	if (track?.AVAILABLE_COUNTRIES?.STREAM_ADS)
+		addt.regions = [...track.AVAILABLE_COUNTRIES.STREAM_ADS]
 	if (track?.COPYRIGHT) addt.copyright = track.COPYRIGHT
 	if (track.SNG_CONTRIBUTORS?.producer) addt.producers = track.SNG_CONTRIBUTORS?.producer
 	if (track.SNG_CONTRIBUTORS?.composer) addt.composers = track.SNG_CONTRIBUTORS?.composer

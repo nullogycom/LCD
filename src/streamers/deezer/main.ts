@@ -280,7 +280,7 @@ export default class Deezer implements StreamerWithLogin {
 			tracks: SONGS.data.map(parseTrack)
 		}
 
-		if (!data.metadata.trackCount) data.metadata.trackCount = data.tracks.length 
+		if (!data.metadata.trackCount) data.metadata.trackCount = data.tracks.length
 
 		return data
 	}

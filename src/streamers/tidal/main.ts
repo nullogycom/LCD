@@ -428,7 +428,7 @@ export default class Tidal implements Streamer {
 			})
 			const sessionData = <SessionData>await sessionResponse.json()
 
-			this.userId = sessionData.userId 
+			this.userId = sessionData.userId
 			this.countryCode = sessionData.countryCode
 		}
 		const subscription = <SubscriptionData>(
