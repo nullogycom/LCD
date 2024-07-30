@@ -34,6 +34,7 @@ export function parseArtist(raw: RawArtist): Artist {
 
 export interface RawAlbum {
 	title: string
+	version?: string
 	id: string
 	url: string
 	image: {
@@ -62,7 +63,7 @@ export interface RawAlbum {
 
 export function parseAlbum(raw: RawAlbum) {
 	const album: Album = {
-		title: raw.title,
+		title: raw.version ? `${raw.title} (${raw.version})` : raw.title,
 		id: raw.id,
 		url: raw.url ?? `https://play.qobuz.com/album/${raw.id}`,
 		coverArtwork: [
@@ -96,6 +97,7 @@ export function parseAlbum(raw: RawAlbum) {
 
 export interface RawTrack {
 	title: string
+	version?: string
 	id: number
 	copyright?: string
 	performer: RawArtist
@@ -110,7 +112,7 @@ export interface RawTrack {
 
 export function parseTrack(raw: RawTrack): Track {
 	let track: Track = {
-		title: raw.title,
+		title: raw.version ? `${raw.title} (${raw.version})` : raw.title,
 		id: raw.id.toString(),
 		url: `https://play.qobuz.com/track/${raw.id.toString()}`,
 		copyright: raw.copyright,

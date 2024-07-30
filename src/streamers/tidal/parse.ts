@@ -92,6 +92,7 @@ export interface RawTrack {
 	trackNumber?: number
 	volumeNumber?: number
 	title: string
+	version?: string
 	album: RawAlbum
 }
 
@@ -99,7 +100,7 @@ export function parseTrack(raw: RawTrack): Track {
 	const track: Track = {
 		url: raw.url,
 		id: raw.id,
-		title: raw.title,
+		title: raw.version ? `${raw.title} (${raw.version})` : raw.title,
 		durationMs: raw.duration * 1000,
 		artists: raw.artists.map(parseArtist),
 		album: parseAlbum(raw.album)

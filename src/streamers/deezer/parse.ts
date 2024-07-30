@@ -117,6 +117,7 @@ export function parseAlbum(album: DeezerAlbum): Album {
 export interface DeezerTrack {
 	SNG_ID: string
 	SNG_TITLE: string
+	VERSION: string
 	EXPLICIT_LYRICS: '0' | '1'
 	TRACK_NUMBER: string
 	DISK_NUMBER: string
@@ -151,7 +152,7 @@ export function parseTrack(track: DeezerTrack): Track {
 	if (track.SNG_CONTRIBUTORS?.composer) addt.lyricists = track.SNG_CONTRIBUTORS?.lyricist
 
 	return {
-		title: track.SNG_TITLE,
+		title: track.VERSION ? `${track.SNG_TITLE} ${track.VERSION}` : track.SNG_TITLE,
 		id: track.SNG_ID,
 		url: `https://www.deezer.com/track/${track.SNG_ID}`,
 		explicit: track.EXPLICIT_LYRICS == '1',
