@@ -20,6 +20,8 @@ jobs:
       - run: pnpm install
       - run: pnpm run build
       - run: pnpm run test
+        env:
+          TEST_OPTIONS: ${{ secrets.TEST_OPTIONS }}
       - name: Comment test results
         uses: https://github.com/thollander/actions-comment-pull-request@v2
         with:
