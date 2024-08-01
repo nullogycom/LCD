@@ -24,9 +24,7 @@ if (!process.env.TEST_OPTIONS) {
 		)
 		process.exit(1)
 	}
-} else {
-	testOptions = JSON.parse(process.env.TEST_OPTIONS)
-}
+} else testOptions = JSON.parse(process.env.TEST_OPTIONS)
 
 async function start() {
 	const lucidaOptions: LucidaOptions = {

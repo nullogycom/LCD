@@ -1,5 +1,5 @@
 import { fetch, HeadersInit } from 'undici'
-import { DEFAULT_HEADERS, SC_VERSION } from './constants.js'
+import { DEFAULT_HEADERS } from './constants.js'
 import {
 	ItemType,
 	Streamer,
@@ -42,6 +42,17 @@ interface SoundcloudTranscoding {
 		mime_type: string
 	}
 	quality: string
+}
+
+interface SoundCloudSubscriptionData {
+	active_subscription: {
+		state: string
+		subscription_period_started_at: string
+		expires_at: string
+		recurring: boolean
+		trial: boolean
+		is_eligible: boolean
+	} | null
 }
 
 export default class Soundcloud implements Streamer {
@@ -110,7 +121,7 @@ export default class Soundcloud implements Streamer {
 		).text()
 
 		const client = {
-			version: SC_VERSION,
+			version: response.split(`__sc_version="`)[1].split(`"</script>`)[0],
 			anonId: response.split(`[{"hydratable":"anonymousId","data":"`)[1].split(`"`)[0],
 			id: await fetchKey(response)
 		}
@@ -135,7 +146,7 @@ export default class Soundcloud implements Streamer {
 	#formatURL(og: string, client: ScClient): string {
 		const parsed = new URL(og)
 
-		if (client.anonId) parsed.searchParams.append('user_id', client.anonId)
+		if (client.anonId && !this.oauthToken) parsed.searchParams.append('user_id', client.anonId)
 		if (client.id) parsed.searchParams.append('client_id', client.id)
 		if (client.version) parsed.searchParams.append('app_version', client.version)
 		if (!parsed.searchParams.get('app_locale')) parsed.searchParams.append('app_locale', 'en')
@@ -245,14 +256,25 @@ export default class Soundcloud implements Streamer {
 		return { ...api, id }
 	}
 	async getAccountInfo(): Promise<StreamerAccount> {
-		const track = <TrackGetByUrlResponse>(
-			await this.getByUrl('https://soundcloud.com/ween/polka-dot-tail')
-		)
-		const stream = await track.getStream()
-		if (stream.mimeType.startsWith('audio/mp4')) {
-			stream.stream.unpipe()
-			return { valid: true, premium: true, explicit: true }
-		} else return { valid: true, premium: false, explicit: true }
+		const client = this.client || (await this.#getClient())
+		const subscriptionQuery = <SoundCloudSubscriptionData>await (
+			await fetch(
+				this.#formatURL(
+					`https://api-v2.soundcloud.com/payments/quotations/consumer-subscription`,
+					client
+				),
+				{
+					method: 'get',
+					headers: headers(this.oauthToken)
+				}
+			)
+		).json()
+
+		return {
+			valid: true,
+			premium: subscriptionQuery?.active_subscription?.state == 'active',
+			explicit: true
+		}
 	}
 }
 

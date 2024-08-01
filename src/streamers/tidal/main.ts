@@ -1,5 +1,7 @@
 import { fetch } from 'undici'
 import { spawn } from 'child_process'
+import os from 'node:os'
+import fs from 'node:fs'
 import {
 	ItemType,
 	GetByUrlResponse,
@@ -329,6 +331,7 @@ export default class Tidal implements Streamer {
 			manifestMimeType: string
 			audioQuality: 'LOW' | 'HIGH' | 'LOSSLESS' | 'HI_RES' | 'HI_RES_LOSSLESS'
 		}
+
 		const playbackInfoResponse = <PlaybackInfo>await this.#get(
 			`tracks/${trackId}/playbackinfopostpaywall/v4`,
 			{
@@ -338,9 +341,6 @@ export default class Tidal implements Streamer {
 				prefetch: 'false'
 			}
 		)
-
-		if (playbackInfoResponse.audioQuality == 'HIGH' || playbackInfoResponse.audioQuality == 'LOW')
-			throw new Error('This ripper is incompatible with AAC codecs formats at the moment.')
 
 		const manifestStr = Buffer.from(playbackInfoResponse.manifest, 'base64').toString('utf-8')
 		interface Manifest {
@@ -359,41 +359,103 @@ export default class Tidal implements Streamer {
 		}
 
 		const trackUrls = parseMpd(manifestStr)
+		const args = await this.#getFfArgs(playbackInfoResponse.audioQuality)
 
-		const ffmpegProc = spawn('ffmpeg', [
-			'-hide_banner',
-			'-loglevel',
-			'error',
-			'-i',
-			'-',
-			'-c:a',
-			'copy',
-			'-f',
-			'flac',
-			'-'
-		])
+		const ffmpegProc = spawn('ffmpeg', args)
+		switch (playbackInfoResponse.audioQuality) {
+			case 'LOW':
+			case 'HIGH': {
+				return new Promise(function (resolve, reject) {
+					const stream = new Stream.Readable({
+						// eslint-disable-next-line @typescript-eslint/no-empty-function
+						read() {}
+					})
+					async function load() {
+						for (const url of trackUrls) {
+							const resp = await fetch(url)
+							if (!resp.body) throw new Error('Response has no body')
+							for await (const chunk of resp.body) {
+								stream.push(chunk)
+							}
+						}
+						stream.push(null)
+					}
+					stream.pipe(ffmpegProc.stdin)
 
-		const stream = new Stream.Readable({
-			// eslint-disable-next-line @typescript-eslint/no-empty-function
-			read() {}
-		})
-		async function load() {
-			for (const url of trackUrls) {
-				const resp = await fetch(url)
-				if (!resp.body) throw new Error('Response has no body')
-				for await (const chunk of resp.body) {
-					stream.push(chunk)
+					let err: string
+
+					ffmpegProc.stderr.on('data', function (data) {
+						err = data.toString()
+					})
+
+					load()
+
+					ffmpegProc.once('exit', async function (code) {
+						const folder = args[args.length - 1]
+							.split('/')
+							.slice(0, args[args.length - 1].split('/').length - 1)
+							.join('/')
+						if (code == 0)
+							resolve({
+								mimeType: 'audio/mp4',
+								stream: fs.createReadStream(args[args.length - 1]).once('end', async function () {
+									await fs.promises.rm(folder, { recursive: true })
+								})
+							})
+						else {
+							reject(`FFMPEG error: ${err}` || 'FFMPEG could not handle the file.')
+							await fs.promises.rm(folder, { recursive: true })
+						}
+					})
+				})
+			}
+
+			default: {
+				const stream = new Stream.Readable({
+					// eslint-disable-next-line @typescript-eslint/no-empty-function
+					read() {}
+				})
+
+				// eslint-disable-next-line no-inner-declarations
+				async function load() {
+					for (const url of trackUrls) {
+						const resp = await fetch(url)
+						if (!resp.body) throw new Error('Response has no body')
+						for await (const chunk of resp.body) {
+							stream.push(chunk)
+						}
+					}
+					stream.push(null)
+				}
+				stream.pipe(ffmpegProc.stdin)
+				load()
+
+				return {
+					mimeType: 'audio/flac',
+					stream: ffmpegProc.stdout
 				}
 			}
-			stream.push(null)
 		}
-		stream.pipe(ffmpegProc.stdin)
-		ffmpegProc.stderr.pipe(process.stderr)
-		load()
-
-		return {
-			mimeType: 'audio/flac',
-			stream: ffmpegProc.stdout
+	}
+	async #getFfArgs(audioQuality: 'LOW' | 'HIGH' | 'LOSSLESS' | 'HI_RES' | 'HI_RES_LOSSLESS') {
+		switch (audioQuality) {
+			case 'LOW':
+			case 'HIGH':
+				// eslint-disable-next-line no-case-declarations
+				const folder = await fs.promises.mkdtemp(`${os.tmpdir()}/lucida`)
+				return [
+					'-hide_banner',
+					'-loglevel',
+					'error',
+					'-i',
+					'-',
+					'-c:a',
+					'copy',
+					'-y',
+					`${folder}/data.m4a`
+				]
+			default:
+				return ['-hide_banner', '-loglevel', 'error', '-i', '-', '-c:a', 'copy', '-f', 'flac', '-']
 		}
 	}
 	#getUrlParts(url: string): ['artist' | 'album' | 'track', string] {
