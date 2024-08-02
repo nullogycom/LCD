@@ -1,4 +1,4 @@
-import { Album, Artist, Track } from '../../types.js'
+import { Album, Artist, Playlist, Track } from '../../types.js'
 import { DOMParser } from 'xmldom-qsa'
 
 export interface RawArtist {
@@ -76,6 +76,50 @@ export function parseAlbum(raw: RawAlbum): Album {
 	if (raw.numberOfVolumes) album.discCount = raw.numberOfVolumes
 	if (raw.releaseDate) album.releaseDate = new Date(raw.releaseDate)
 	return album
+}
+
+export interface RawPlaylist {
+	uuid: string
+	title: string
+	url: string
+	numberOfTracks: number
+	tracks: Track[]
+	cover: string
+}
+
+export function parsePlaylist(raw: RawPlaylist): Playlist {
+	let coverPath
+
+	if (raw.cover) coverPath = raw.cover.replace(/-/gm, '/')
+	else coverPath = null
+
+	const playlist: Playlist = {
+		id: raw.uuid,
+		title: raw.title,
+		url: raw.url,
+		trackCount: raw.numberOfTracks,
+		tracks: []
+	}
+
+	playlist.coverArtwork = [
+		{
+			url: `https://resources.tidal.com/images/${coverPath}/160x160.jpg`,
+			width: 160,
+			height: 160
+		},
+		{
+			url: `https://resources.tidal.com/images/${coverPath}/320x320.jpg`,
+			width: 320,
+			height: 320
+		},
+		{
+			url: `https://resources.tidal.com/images/${coverPath}/1280x1280.jpg`,
+			width: 1280,
+			height: 1280
+		}
+	]
+
+	return playlist
 }
 
 export interface RawTrack {

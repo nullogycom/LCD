@@ -16,11 +16,13 @@ import {
 	Contributor,
 	RawAlbum,
 	RawArtist,
+	RawPlaylist,
 	RawTrack,
 	addCredits,
 	parseAlbum,
 	parseArtist,
 	parseMpd,
+	parsePlaylist,
 	parseTrack
 } from './parse.js'
 import Stream, { Readable } from 'stream'
@@ -306,6 +308,20 @@ export default class Tidal implements Streamer {
 		)
 		return contributorResponse.items.map((item) => parseTrack(addCredits(item.item, item.credits)))
 	}
+	async #getPlaylist(playlistId: number | string) {
+		const playlistResponse = await this.#get(`playlists/${playlistId}`)
+		return parsePlaylist(<RawPlaylist>playlistResponse)
+	}
+	async #getPlaylistTracks(playlistId: number | string) {
+		const tracksResponse = <{ items: RawTrack[] }>await this.#get(
+			`playlists/${playlistId}/tracks`,
+			{
+				offset: 0,
+				limit: 10000
+			}
+		)
+		return tracksResponse.items.map((item) => parseTrack(item))
+	}
 	async #getArtist(artistId: number | string) {
 		const [artistResponse, albumsResponse, tracksResponse] = await Promise.all([
 			<Promise<RawArtist>>this.#get(`artists/${artistId}`),
@@ -458,13 +474,18 @@ export default class Tidal implements Streamer {
 				return ['-hide_banner', '-loglevel', 'error', '-i', '-', '-c:a', 'copy', '-f', 'flac', '-']
 		}
 	}
-	#getUrlParts(url: string): ['artist' | 'album' | 'track', string] {
+	#getUrlParts(url: string): ['artist' | 'album' | 'track' | 'playlist', string] {
 		const urlParts = url
 			.match(/^https?:\/\/(?:www\.|listen\.)?tidal\.com\/(?:browse\/)?(.*?)\/(.*?)\/?$/)
 			?.slice(1, 3)
 		if (!urlParts) throw new Error('URL not supported')
 		urlParts[1] = urlParts[1].replace(/\?.*?$/, '')
-		if (urlParts[0] != 'artist' && urlParts[0] != 'album' && urlParts[0] != 'track') {
+		if (
+			urlParts[0] != 'artist' &&
+			urlParts[0] != 'album' &&
+			urlParts[0] != 'track' &&
+			urlParts[0] != 'playlist'
+		) {
 			throw new Error('URL unrecognised')
 		}
 		return [urlParts[0], urlParts[1]]
@@ -493,6 +514,12 @@ export default class Tidal implements Streamer {
 				return {
 					type,
 					metadata: await this.#getArtist(id)
+				}
+			case 'playlist':
+				return {
+					type,
+					tracks: await this.#getPlaylistTracks(id),
+					metadata: await this.#getPlaylist(id)
 				}
 		}
 	}
