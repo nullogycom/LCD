@@ -417,11 +417,11 @@ export default class Deezer implements StreamerWithLogin {
 		trackTokenExpiry: number,
 		format: DeezerFormat
 	): Promise<string> {
-		if (Date.now() - (this.renewTimestamp ?? 0) >= 3600)
+		if (Date.now() - (this.renewTimestamp ?? 0) >= 3600 * 1000)
 			// renew license token
 			await this.#apiCall('deezer.getUserData')
 
-		if (Date.now() - trackTokenExpiry >= 0)
+		if (Date.now() / 1000 - trackTokenExpiry >= 0)
 			// renew track token
 			trackToken = (
 				await this.#apiCall('song.getData', {
