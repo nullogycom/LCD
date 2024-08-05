@@ -1,4 +1,4 @@
-import { fetch } from 'undici'
+import { Dispatcher, fetch } from 'undici'
 import {
 	Album,
 	Artist,
@@ -29,6 +29,7 @@ import { Blowfish } from 'blowfish-cbc'
 
 interface DeezerOptions {
 	arl?: string
+	dispatcher?: Dispatcher | undefined
 }
 
 interface APIMethod {
@@ -86,11 +87,13 @@ export default class Deezer implements StreamerWithLogin {
 	renewTimestamp?: number
 	country?: string
 	language?: string
+	dispatcher?: Dispatcher | undefined
 
 	availableFormats: Set<DeezerFormat> = new Set()
 
 	constructor(options?: DeezerOptions) {
 		if (options?.arl) this.arl = options.arl
+		//if (options?.dispatcher) this.dispatcher = options.dispatcher
 	}
 
 	async #apiCall<T extends keyof APIMethod>(
@@ -114,7 +117,12 @@ export default class Deezer implements StreamerWithLogin {
 		}
 
 		const body = JSON.stringify(data)
-		const req = await fetch(url, { method: 'POST', body, headers: this.headers })
+		const req = await fetch(url, {
+			method: 'POST',
+			body,
+			headers: this.headers,
+			dispatcher: this.dispatcher
+		})
 		const { results, error } = <DeezerResponse>await req.json()
 
 		if (error.constructor.name == 'Object') {
@@ -167,7 +175,10 @@ export default class Deezer implements StreamerWithLogin {
 	async login(username: string, password: string): Promise<void> {
 		if (this.arl) await this.#loginViaArl(this.arl)
 		else {
-			const resp = await fetch('https://www.deezer.com/', { headers: this.headers })
+			const resp = await fetch('https://www.deezer.com/', {
+				headers: this.headers,
+				dispatcher: this.dispatcher
+			})
 			const setCookie = resp.headers.get('Set-Cookie') ?? ''
 			const sid = setCookie.match(/sid=(fr[0-9a-f]+)/)![1]
 			this.headers['Cookie'] = `sid=${sid}`
@@ -181,7 +192,7 @@ export default class Deezer implements StreamerWithLogin {
 					password,
 					hash: this.#md5(CLIENT_ID + username + password + CLIENT_SECRET)
 				})}`,
-				{ headers: this.headers }
+				{ headers: this.headers, dispatcher: this.dispatcher }
 			)
 			const { error } = <DeezerLoginResponse>await loginReq.json()
 
@@ -242,7 +253,7 @@ export default class Deezer implements StreamerWithLogin {
 	/* ---------- GET INFO FROM URL ---------- */
 
 	async #unshortenUrl(url: URL): Promise<URL> {
-		const res = await fetch(url, { redirect: 'manual' })
+		const res = await fetch(url, { redirect: 'manual', dispatcher: this.dispatcher })
 		const location = res.headers.get('Location')
 
 		if (res.status != 302 || !location) throw new Error('URL not supported')
@@ -351,7 +362,7 @@ export default class Deezer implements StreamerWithLogin {
 		// download
 
 		const url = await this.#getTrackUrl(id, trackToken, trackTokenExpiry, format)
-		const streamResp = await fetch(url)
+		const streamResp = await fetch(url, { dispatcher: this.dispatcher })
 		if (!streamResp.ok)
 			throw new Error(`Failed to get track stream. Status code: ${streamResp.status}`)
 
@@ -441,7 +452,8 @@ export default class Deezer implements StreamerWithLogin {
 					}
 				],
 				track_tokens: [trackToken]
-			})
+			}),
+			dispatcher: this.dispatcher
 		})
 		const res = <DeezerMediaResponse>await req.json()
 

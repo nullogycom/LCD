@@ -1,4 +1,4 @@
-import { fetch, HeadersInit } from 'undici'
+import { Dispatcher, fetch, HeadersInit } from 'undici'
 import { DEFAULT_HEADERS } from './constants.js'
 import {
 	ItemType,
@@ -30,6 +30,7 @@ function headers(oauthToken?: string | undefined): HeadersInit {
 
 interface SoundcloudOptions {
 	oauthToken?: string
+	dispatcher: Dispatcher | undefined
 }
 
 interface SoundcloudTranscoding {
@@ -69,8 +70,10 @@ export default class Soundcloud implements Streamer {
 	} as const
 	oauthToken?: string
 	client?: ScClient
+	dispatcher: Dispatcher | undefined
 	constructor(options: SoundcloudOptions) {
 		this.oauthToken = options?.oauthToken
+		this.dispatcher = options?.dispatcher
 	}
 	async search(query: string, limit = 20): Promise<SearchResults> {
 		const client = this.client || (await this.#getClient())
@@ -81,7 +84,7 @@ export default class Soundcloud implements Streamer {
 				)}&offset=0&linked_partitioning=1&app_locale=en&limit=${limit}`,
 				client
 			),
-			{ method: 'get', headers: headers(this.oauthToken) }
+			{ method: 'get', headers: headers(this.oauthToken), dispatcher: this.dispatcher }
 		)
 		if (!response.ok) {
 			const errMsg = await response.text()
@@ -116,7 +119,8 @@ export default class Soundcloud implements Streamer {
 		const response = await (
 			await fetch(`https://soundcloud.com/`, {
 				method: 'get',
-				headers: headers()
+				headers: headers(this.oauthToken),
+				dispatcher: this.dispatcher
 			})
 		).text()
 
@@ -163,7 +167,13 @@ export default class Soundcloud implements Streamer {
 		url = url.replace('//m.', '//')
 
 		// getting the IDs and track authorization
-		const html = await (await fetch(url, { method: 'get', headers: headers() })).text()
+		const html = await (
+			await fetch(url, {
+				method: 'get',
+				headers: headers(this.oauthToken),
+				dispatcher: this.dispatcher
+			})
+		).text()
 
 		switch (type) {
 			case 'track': {
@@ -177,7 +187,8 @@ export default class Soundcloud implements Streamer {
 					await (
 						await fetch(this.#formatURL(naked, client), {
 							method: 'get',
-							headers: headers(this.oauthToken)
+							headers: headers(this.oauthToken),
+							dispatcher: this.dispatcher
 						})
 					).text()
 				)
@@ -248,7 +259,8 @@ export default class Soundcloud implements Streamer {
 			await (
 				await fetch(this.#formatURL(`https://api-v2.soundcloud.com/tracks/${id}`, client), {
 					method: 'get',
-					headers: headers(this.oauthToken)
+					headers: headers(this.oauthToken),
+					dispatcher: this.dispatcher
 				})
 			).text()
 		)
@@ -265,7 +277,8 @@ export default class Soundcloud implements Streamer {
 				),
 				{
 					method: 'get',
-					headers: headers(this.oauthToken)
+					headers: headers(this.oauthToken),
+					dispatcher: this.dispatcher
 				}
 			)
 		).json()
