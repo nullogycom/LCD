@@ -100,6 +100,10 @@ export default class Deezer implements StreamerWithLogin {
 		method: T,
 		data: { [key: string]: string | number | string[] } = {}
 	): Promise<APIMethod[T]> {
+		// sid + checkForm renewal
+		if (method != 'deezer.getUserData' && method != 'user.getArl' && this.#isSessionExpired())
+			await this.#apiCall('deezer.getUserData')
+
 		let apiToken = this.apiToken
 		if (method == 'deezer.getUserData' || method == 'user.getArl') apiToken = ''
 
@@ -166,6 +170,10 @@ export default class Deezer implements StreamerWithLogin {
 		}
 
 		return userData
+	}
+
+	#isSessionExpired() {
+		return Date.now() - (this.renewTimestamp ?? 0) >= 3600 * 1000
 	}
 
 	#md5(str: string) {
@@ -428,7 +436,7 @@ export default class Deezer implements StreamerWithLogin {
 		trackTokenExpiry: number,
 		format: DeezerFormat
 	): Promise<string> {
-		if (Date.now() - (this.renewTimestamp ?? 0) >= 3600 * 1000)
+		if (this.#isSessionExpired())
 			// renew license token
 			await this.#apiCall('deezer.getUserData')
 
