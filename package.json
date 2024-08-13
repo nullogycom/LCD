@@ -1,6 +1,6 @@
 {
 	"name": "lucida",
-	"version": "2.0.0-27",
+	"version": "2.0.0-28",
 	"description": "A modular music downloader tool",
 	"main": "build/index.js",
 	"type": "module",
@@ -36,7 +36,7 @@
 	"dependencies": {
 		"blowfish-cbc": "^1.0.1",
 		"image-size": "^1.1.1",
-		"librespot": "^0.2.5",
+		"librespot": "^0.2.7",
 		"undici": "^6.19.4",
 		"xmldom-qsa": "^1.1.3"
 	},
