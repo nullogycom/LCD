@@ -57,7 +57,7 @@ interface SoundCloudSubscriptionData {
 }
 
 export default class Soundcloud implements Streamer {
-	hostnames = ['soundcloud.com', 'm.soundcloud.com', 'www.soundcloud.com']
+	hostnames = ['soundcloud.com', 'm.soundcloud.com', 'www.soundcloud.com', 'on.soundcloud.com']
 	testData = {
 		'https://soundcloud.com/saoirsedream/charlikartlanparty': {
 			type: 'track',
@@ -144,6 +144,9 @@ export default class Soundcloud implements Streamer {
 	}
 
 	async getByUrl(url: string): Promise<GetByUrlResponse> {
+		const { hostname } = new URL(url)
+
+		if (hostname == 'on.soundcloud.com') url = await followRedirect(url)
 		return await this.#getMetadata(url)
 	}
 
@@ -354,4 +357,13 @@ async function getStream(
 			stream: await parseHls(json.url, container)
 		}
 	}
+}
+
+async function followRedirect(url: string) {
+	const res = await fetch(url, { redirect: 'manual' })
+	const location = res.headers.get('Location')
+
+	if (res.status != 302 || !location) throw new Error('URL not supported')
+
+	return location
 }
