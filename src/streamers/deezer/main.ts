@@ -520,4 +520,14 @@ export default class Deezer implements StreamerWithLogin {
 			explicit: userData.USER.EXPLICIT_CONTENT_LEVEL != 'explicit_hide'
 		}
 	}
+
+	async isrcLookup(isrc: string): Promise<Track> {
+		const resp = <{ type?: 'track'; link?: string }>(
+			await (await fetch(`https://api.deezer.com/track/isrc:${isrc}`)).json()
+		)
+		if (resp.type == 'track' && resp.link) {
+			const track = <Track>(await this.getByUrl(resp.link)).metadata
+			return track
+		} else throw new Error(`Not available on Deezer.`)
+	}
 }

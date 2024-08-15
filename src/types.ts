@@ -149,6 +149,7 @@ export interface Streamer {
 	hostnames: string[]
 	testData?: StreamerTestData
 	search(query: string, limit: number): Promise<SearchResults>
+	isrcLookup?(isrc: string): Promise<Track>
 	getTypeFromUrl(url: string): Promise<ItemType>
 	getByUrl:
 		| ((url: string) => Promise<GetByUrlResponse>)

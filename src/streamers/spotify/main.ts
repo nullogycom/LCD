@@ -5,7 +5,8 @@ import {
 	ItemType,
 	SearchResults,
 	StreamerAccount,
-	StreamerWithLogin
+	StreamerWithLogin,
+	Track
 } from '../../types.js'
 
 class Spotify implements StreamerWithLogin {
@@ -133,6 +134,11 @@ class Spotify implements StreamerWithLogin {
 			artists: results.artists?.map((e) => parseArtist(e)) ?? [],
 			tracks: results.tracks?.map((e) => parseTrack(e)) ?? []
 		}
+	}
+	async isrcLookup(isrc: string): Promise<Track> {
+		const results = await this.search(`isrc:${isrc}`)
+		if (results?.tracks[0]) return <Track>(await this.getByUrl(results.tracks?.[0]?.url)).metadata
+		else throw new Error(`Not available on Spotify.`)
 	}
 	async getAccountInfo(): Promise<StreamerAccount> {
 		const info = await this.client.get.me()

@@ -64,6 +64,24 @@ interface SubscriptionData {
 	paymentOverdue: boolean
 }
 
+interface RawSearchResults {
+	albums: {
+		items: RawAlbum[]
+	}
+	artists: {
+		items: RawArtist[]
+	}
+	tracks: {
+		items: RawTrack[]
+	}
+}
+
+interface RawIsrcLookup {
+	limit: number
+	offset: number
+	items: RawTrack[]
+}
+
 export default class Tidal implements Streamer {
 	tvToken: string
 	tvSecret: string
@@ -115,6 +133,11 @@ export default class Tidal implements Streamer {
 			'Accept-Encoding': 'gzip',
 			'User-Agent': 'TIDAL_ANDROID/1039 okhttp/3.14.9'
 		}
+	}
+	async isrcLookup(isrc: string): Promise<Track> {
+		const isrcQuery = <RawIsrcLookup>await this.#get('tracks', { isrc })
+		if (isrcQuery?.items?.[0]) return <Track>(await this.getByUrl(isrcQuery.items[0].url)).metadata
+		else throw new Error(`Not available on Tidal.`)
 	}
 	async #get(
 		url: string,
@@ -257,17 +280,6 @@ export default class Tidal implements Streamer {
 		return false
 	}
 	async search(query: string, limit = 20): Promise<SearchResults> {
-		interface RawSearchResults {
-			albums: {
-				items: RawAlbum[]
-			}
-			artists: {
-				items: RawArtist[]
-			}
-			tracks: {
-				items: RawTrack[]
-			}
-		}
 		const results = <RawSearchResults>await this.#get('search/top-hits', {
 			query: query,
 			limit: limit,

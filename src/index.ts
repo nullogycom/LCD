@@ -91,6 +91,15 @@ class Lucida {
 			})
 		)
 	}
+	async isrcLookup(isrc: string) {
+		const results = await Promise.all(
+			Object.values(this.modules).map(async (e) => {
+				if (e.isrcLookup) return await e.isrcLookup(isrc)
+			})
+		)
+		const moduleNames = Object.keys(this.modules)
+		return Object.fromEntries(results.map((e, i) => [moduleNames[i], e]))
+	}
 }
 
 export default Lucida

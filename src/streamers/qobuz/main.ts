@@ -300,4 +300,12 @@ export default class Qobuz implements StreamerWithLogin {
 			explicit: true
 		}
 	}
+	async isrcLookup(isrc: string): Promise<Track> {
+		const isrcUrl = (await this.search(isrc)).tracks?.[0]?.url
+		if (!isrcUrl) throw new Error(`Not available on Qobuz.`)
+		else {
+			const track = <Track>(await this.getByUrl(isrcUrl)).metadata
+			return track
+		}
+	}
 }
