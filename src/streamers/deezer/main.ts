@@ -138,7 +138,7 @@ export default class Deezer implements StreamerWithLogin {
 		if (method == 'deezer.getUserData') {
 			const setCookie = req.headers.get('Set-Cookie') ?? ''
 			const sid = setCookie.match(/sid=(fr[0-9a-f]+)/)![1]
-			this.headers['Cookie'] += `arl=${this.arl}; sid=${sid}`
+			this.headers['Cookie'] = `arl=${this.arl}; sid=${sid}`
 
 			const res = <APIMethod['deezer.getUserData']>results
 
