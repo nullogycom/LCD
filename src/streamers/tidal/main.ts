@@ -505,10 +505,11 @@ export default class Tidal implements Streamer {
 					metadata: await this.#getTrack(id)
 				}
 			case 'album':
+				const tracks = await this.#getAlbumTracks(id)
 				return {
 					type,
-					tracks: await this.#getAlbumTracks(id),
-					metadata: await this.#getAlbum(id)
+					tracks: tracks,
+					metadata: { ...(await this.#getAlbum(id)), trackCount: tracks.length }
 				}
 			case 'artist':
 				return {

@@ -308,7 +308,7 @@ export default class Deezer implements StreamerWithLogin {
 		})
 
 		const data = {
-			metadata: parseAlbum(DATA),
+			metadata: { ...parseAlbum(DATA), trackCount: SONGS.data.length },
 			tracks: SONGS.data.map(parseTrack)
 		}
 

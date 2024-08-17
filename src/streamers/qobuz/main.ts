@@ -207,7 +207,7 @@ export default class Qobuz implements StreamerWithLogin {
 			app_id: this.appId
 		})
 		return {
-			metadata: parseAlbum(albumResponse),
+			metadata: { ...parseAlbum(albumResponse), trackCount: albumResponse.tracks?.items.length },
 			tracks: albumResponse.tracks?.items.map(parseTrack)
 		}
 	}
