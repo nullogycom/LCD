@@ -84,7 +84,6 @@ export default class Deezer implements StreamerWithLogin {
 	arl?: string
 	apiToken?: string
 	licenseToken?: string
-	renewTimestamp?: number
 	country?: string
 	language?: string
 	dispatcher?: Dispatcher | undefined
@@ -98,12 +97,9 @@ export default class Deezer implements StreamerWithLogin {
 
 	async #apiCall<T extends keyof APIMethod>(
 		method: T,
-		data: { [key: string]: string | number | string[] } = {}
+		data: { [key: string]: string | number | string[] } = {},
+		doSessionRenewal = true
 	): Promise<APIMethod[T]> {
-		// sid + checkForm renewal
-		if (method != 'deezer.getUserData' && method != 'user.getArl' && this.#isSessionExpired())
-			await this.#apiCall('deezer.getUserData')
-
 		let apiToken = this.apiToken
 		if (method == 'deezer.getUserData' || method == 'user.getArl') apiToken = ''
 
@@ -131,7 +127,17 @@ export default class Deezer implements StreamerWithLogin {
 
 		if (error.constructor.name == 'Object') {
 			const [type, msg] = Object.entries(error)[0]
-			if (type == 'VALID_TOKEN_REQUIRED') throw new Error('Invalid ARL')
+
+			// session renewal
+			if (
+				doSessionRenewal &&
+				(type == 'VALID_TOKEN_REQUIRED' || type == 'NEED_USER_AUTH_REQUIRED')
+			) {
+				const userData = await this.#apiCall('deezer.getUserData', {}, false)
+				if (userData.USER.USER_ID == 0) throw new Error('ARL expired')
+				return await this.#apiCall(method, data, false)
+			}
+
 			throw new Error(`API Error: ${type}\n${msg}`)
 		}
 
@@ -151,8 +157,6 @@ export default class Deezer implements StreamerWithLogin {
 			this.availableFormats = new Set([DeezerFormat.MP3_128])
 			if (res?.USER?.OPTIONS?.web_hq) this.availableFormats.add(DeezerFormat.MP3_320)
 			if (res?.USER?.OPTIONS?.web_lossless) this.availableFormats.add(DeezerFormat.FLAC)
-
-			this.renewTimestamp = Date.now()
 		}
 
 		return results
@@ -170,10 +174,6 @@ export default class Deezer implements StreamerWithLogin {
 		}
 
 		return userData
-	}
-
-	#isSessionExpired() {
-		return Date.now() - (this.renewTimestamp ?? 0) >= 3600 * 1000
 	}
 
 	#md5(str: string) {
@@ -436,10 +436,6 @@ export default class Deezer implements StreamerWithLogin {
 		trackTokenExpiry: number,
 		format: DeezerFormat
 	): Promise<string> {
-		if (this.#isSessionExpired())
-			// renew license token
-			await this.#apiCall('deezer.getUserData')
-
 		if (Date.now() / 1000 - trackTokenExpiry >= 0)
 			// renew track token
 			trackToken = (
