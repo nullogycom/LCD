@@ -111,12 +111,16 @@ export interface RawTrack {
 }
 
 export function parseTrack(raw: RawTrack): Track {
+	const artists = []
+	const artist = raw.performer ?? raw.album?.artist
+	if (artist) artists.push(parseArtist(artist))
+
 	let track: Track = {
 		title: raw.version ? `${raw.title} (${raw.version})` : raw.title,
 		id: raw.id.toString(),
 		url: `https://play.qobuz.com/track/${raw.id.toString()}`,
 		copyright: raw.copyright,
-		artists: [parseArtist(raw.performer)],
+		artists,
 		durationMs: raw.duration * 1000,
 		explicit: raw.parental_warning,
 		isrc: raw.isrc,
