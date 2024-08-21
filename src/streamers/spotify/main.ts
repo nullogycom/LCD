@@ -30,8 +30,8 @@ class Spotify implements StreamerWithLogin {
 	constructor(options: LibrespotOptions) {
 		this.client = new Librespot(options)
 	}
-	login(username: string, password: string) {
-		return this.client.login(username, password)
+	async login(username: string, password: string) {
+		return await this.client.login(username, password)
 	}
 	#getUrlParts(url: string): ['artist' | 'album' | 'track' | 'episode' | 'show', string] {
 		const urlObj = new URL(url)
