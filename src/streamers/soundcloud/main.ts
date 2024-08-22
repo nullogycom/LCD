@@ -350,7 +350,8 @@ async function getStream(
 			stream: Readable.fromWeb(streamResp.body!)
 		}
 	} else {
-		const container = transcoding.format.mime_type.split('/')[1].split(';')[0].split('+')[0]
+		let container = transcoding.format.mime_type.split('/')[1].split(';')[0].split('+')[0]
+		if (container == 'mpeg') container = 'mp3'
 
 		return {
 			mimeType: transcoding.format.mime_type,
