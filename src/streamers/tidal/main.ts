@@ -505,6 +505,7 @@ export default class Tidal implements Streamer {
 					metadata: await this.#getTrack(id)
 				}
 			case 'album':
+				// eslint-disable-next-line no-case-declarations
 				const tracks = await this.#getAlbumTracks(id)
 				return {
 					type,
