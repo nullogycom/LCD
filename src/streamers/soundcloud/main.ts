@@ -212,7 +212,8 @@ export default class Soundcloud implements Streamer {
 							api.media.transcodings,
 							api.track_authorization,
 							client,
-							this.oauthToken
+							this.oauthToken,
+							path.split('/')[3]
 						)
 					},
 					metadata: await parseTrack(api)
@@ -261,7 +262,7 @@ export default class Soundcloud implements Streamer {
 				}
 			}
 			default:
-				throw `Type "${type}" not supported.`
+				throw new Error(`Type "${type}" not supported.`)
 		}
 	}
 	async #getRawTrackInfo(id: number | string, client: ScClient) {
@@ -329,7 +330,8 @@ async function getStream(
 	transcodings: Array<SoundcloudTranscoding>,
 	trackAuth: string,
 	client: ScClient,
-	oauthToken?: string | undefined
+	oauthToken?: string | undefined,
+	secretToken?: string | undefined
 ): Promise<GetStreamResponse> {
 	let filter = transcodings.filter((x) => x.quality == 'hq')
 	if (hq == true && filter.length == 0) throw new Error('Could not find HQ format.')
@@ -338,14 +340,15 @@ async function getStream(
 	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('mp3_')) // then mp3
 	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('opus_')) // then opus
 	if (filter.length == 0) throw new Error('Could not find applicable format.') // and this is just in case none of those exist
-
 	const transcoding = filter[0]
-	const streamUrlResp = await fetch(
-		`${transcoding.url}?client_id=${client.id}&track_authorization=${trackAuth}`,
-		{
-			headers: headers(oauthToken)
-		}
-	)
+
+	let streamUrl = new URL(transcoding.url)
+	streamUrl.searchParams.append('client_id', client?.id)
+	streamUrl.searchParams.append('track_authorization', trackAuth)
+
+	const streamUrlResp = await fetch(streamUrl.toString(), {
+		headers: headers(oauthToken)
+	})
 	const json = <{ url: string }>await streamUrlResp.json()
 	if (!json.url) throw new Error('Stream URL could not be retreieved.')
 
