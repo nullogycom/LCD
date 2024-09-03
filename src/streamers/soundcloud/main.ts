@@ -180,7 +180,14 @@ export default class Soundcloud implements Streamer {
 
 		switch (type) {
 			case 'track': {
-				const trackId = html.split(`"soundcloud://sounds:`)?.[1]?.split(`">`)?.[0]
+				let trackId = html.split('"soundcloud://sounds:')?.[1]?.split('">')?.[0]
+				if (!trackId)
+					trackId = html
+						.split(
+							'content="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F'
+						)?.[1]
+						?.split('%3F')[0]
+				if (!trackId) throw new Error('Could not extract track ID.')
 
 				let naked = `https://api-v2.soundcloud.com/tracks/${trackId}`
 				const path = new URL(url).pathname
