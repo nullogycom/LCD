@@ -212,8 +212,7 @@ export default class Soundcloud implements Streamer {
 							api.media.transcodings,
 							api.track_authorization,
 							client,
-							this.oauthToken,
-							path.split('/')[3]
+							this.oauthToken
 						)
 					},
 					metadata: await parseTrack(api)
@@ -330,8 +329,7 @@ async function getStream(
 	transcodings: Array<SoundcloudTranscoding>,
 	trackAuth: string,
 	client: ScClient,
-	oauthToken?: string | undefined,
-	secretToken?: string | undefined
+	oauthToken?: string | undefined
 ): Promise<GetStreamResponse> {
 	let filter = transcodings.filter((x) => x.quality == 'hq')
 	if (hq == true && filter.length == 0) throw new Error('Could not find HQ format.')
@@ -343,7 +341,7 @@ async function getStream(
 	const transcoding = filter[0]
 
 	let streamUrl = new URL(transcoding.url)
-	streamUrl.searchParams.append('client_id', client?.id)
+	if (client?.id) streamUrl.searchParams.append('client_id', client?.id)
 	streamUrl.searchParams.append('track_authorization', trackAuth)
 
 	const streamUrlResp = await fetch(streamUrl.toString(), {
