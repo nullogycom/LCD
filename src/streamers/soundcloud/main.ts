@@ -340,7 +340,7 @@ async function getStream(
 	if (filter.length == 0) throw new Error('Could not find applicable format.') // and this is just in case none of those exist
 	const transcoding = filter[0]
 
-	let streamUrl = new URL(transcoding.url)
+	const streamUrl = new URL(transcoding.url)
 	if (client?.id) streamUrl.searchParams.append('client_id', client?.id)
 	streamUrl.searchParams.append('track_authorization', trackAuth)
 
