@@ -15,8 +15,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
       librespot:
-        specifier: ^0.2.10
-        version: 0.2.10
+        specifier: ^0.2.11
+        version: 0.2.11
       undici:
         specifier: ^6.19.4
         version: 6.19.4
@@ -464,8 +464,8 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
-  librespot@0.2.10:
-    resolution: {integrity: sha512-yyeqIERbRHYJ4wvsiMNX2s4ewr/Zi3fwDdy68d3VtrthHZAL3x9ObiY2oOgPbUzx3/EsuWyiahRpADDEqe2aZw==}
+  librespot@0.2.11:
+    resolution: {integrity: sha512-WAbqvBCqiyutBSC+3rxIsIJcsFcb7l9fyAHVtvPLh3qHyIimV4jqN46GkLgJDASzTuNK9F6v3yG6EQcSh0Zn8Q==}
 
   locate-path@6.0.0:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
@@ -1135,7 +1135,7 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  librespot@0.2.10:
+  librespot@0.2.11:
     dependencies:
       fast-xml-parser: 4.3.4
       protobufjs: 7.2.6
