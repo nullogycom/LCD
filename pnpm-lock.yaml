@@ -15,8 +15,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
       librespot:
-        specifier: ^0.2.12
-        version: 0.2.12
+        specifier: ^0.2.13
+        version: 0.2.13
       undici:
         specifier: ^6.19.4
         version: 6.19.4
@@ -464,8 +464,8 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
-  librespot@0.2.12:
-    resolution: {integrity: sha512-c3/bikWtgu64S2zWjiKXM4xs2YfsodpZGtHhpQ6fLqqw414rvO85NcwPnadh6GRHdYeSE4z8k5qF4n9rBeQAow==}
+  librespot@0.2.13:
+    resolution: {integrity: sha512-+olkx5BerGEMHK/facYWy7tZH4MzLEVw65ETs8xRc54fNtPl+Xzuxi3igo59iSGbReACXIJqHt31rM7+1+3JbQ==}
 
   locate-path@6.0.0:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
@@ -658,8 +658,8 @@ packages:
     resolution: {integrity: sha512-i3uaEUwNdkRq2qtTRRJb13moW5HWqviu7Vl7oYRYz++uPtGHJj+x7TGjcEuwS5Mt2P4nA0U9dhIX3DdB6JGY0g==}
     engines: {node: '>=18.17'}
 
-  unplayplay@1.0.0:
-    resolution: {integrity: sha512-ukQX79Ze9I4+gZARvyQY36ZRkkoFrzvDZmzL39DCODvFjRARVjo+hD/azDBkIa3b73tmd8hKMszrQzfi7hi+SQ==}
+  unplayplay@1.0.1:
+    resolution: {integrity: sha512-n9GC445z1V2ar4467bg0CFWTZasjFgRupw6MV7Ol2oa1Drudl2YvIhJypl9laHgITJIll9zQN5ItjPkor71kWw==}
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
@@ -1138,13 +1138,13 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  librespot@0.2.12:
+  librespot@0.2.13:
     dependencies:
       fast-xml-parser: 4.3.4
       protobufjs: 7.2.6
       shannon-bindings: 0.1.0
       undici: 5.28.3
-      unplayplay: 1.0.0
+      unplayplay: 1.0.1
 
   locate-path@6.0.0:
     dependencies:
@@ -1309,7 +1309,7 @@ snapshots:
 
   undici@6.19.4: {}
 
-  unplayplay@1.0.0:
+  unplayplay@1.0.1:
     dependencies:
       node-addon-api: 8.1.0
 
