@@ -36,7 +36,7 @@
 	"dependencies": {
 		"blowfish-cbc": "^1.0.1",
 		"image-size": "^1.1.1",
-		"librespot": "^0.2.11",
+		"librespot": "^0.2.12",
 		"undici": "^6.19.4",
 		"xmldom-qsa": "^1.1.3"
 	},
