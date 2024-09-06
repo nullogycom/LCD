@@ -1,4 +1,4 @@
-import { Album, Artist, CoverArtwork, Track } from '../../types.js'
+import { Album, Artist, CoverArtwork, Playlist, Track } from '../../types.js'
 import { SIZES } from './constants.js'
 
 export enum DeezerFormat {
@@ -184,4 +184,23 @@ export function parseArtwork(picture: string): CoverArtwork[] {
 		height: size,
 		width: size
 	}))
+}
+
+export interface DeezerPlaylistMetadata {
+	PLAYLIST_ID: string
+	TITLE: string
+	DESCRIPTION: string
+	PLAYLIST_PICTURE: string
+	DURATION: number
+	NB_SONG: number
+}
+
+export function parsePlaylistMetadata(raw: DeezerPlaylistMetadata) {
+	return <Playlist>{
+		id: raw.PLAYLIST_ID,
+		title: raw.TITLE,
+		url: `https://www.deezer.com/playlist/${raw.PLAYLIST_ID}`,
+		coverArtwork: parseArtwork(raw.PLAYLIST_PICTURE),
+		trackCount: raw.NB_SONG
+	}
 }

@@ -5,6 +5,7 @@ import {
 	GetByUrlResponse,
 	GetStreamResponse,
 	ItemType,
+	PlaylistGetByUrlResponse,
 	SearchResults,
 	StreamerAccount,
 	StreamerWithLogin,
@@ -15,6 +16,7 @@ import { createHash } from 'crypto'
 import {
 	DeezerAlbum,
 	DeezerArtist,
+	DeezerPlaylistMetadata,
 	DeezerFormat,
 	DeezerLoginResponse,
 	DeezerMediaResponse,
@@ -22,7 +24,8 @@ import {
 	DeezerUserData,
 	parseAlbum,
 	parseArtist,
-	parseTrack
+	parseTrack,
+	parsePlaylistMetadata
 } from './parse.js'
 import { Readable, Transform } from 'stream'
 import { Blowfish } from 'blowfish-cbc'
@@ -43,8 +46,14 @@ interface APIMethod {
 		DATA: DeezerAlbum
 		SONGS: { data: DeezerTrack[] }
 	}
+	'playlist.getSongs': {
+		data: DeezerTrack[]
+	}
 	'deezer.pageTrack': {
 		DATA: DeezerTrack
+	}
+	'deezer.pagePlaylist': {
+		DATA: DeezerPlaylistMetadata
 	}
 	'user.getArl': string
 	'search.music': { data: (DeezerArtist | DeezerAlbum | DeezerTrack)[] }
@@ -272,7 +281,7 @@ export default class Deezer implements StreamerWithLogin {
 	async #getInfoFromUrl(url: URL): Promise<{ type: ItemType; id: number }> {
 		if (url.hostname == 'deezer.page.link') url = await this.#unshortenUrl(url)
 
-		const match = url.pathname.match(/^\/(?:[a-z]{2}\/)?(track|album|artist)\/(\d+)\/?$/)
+		const match = url.pathname.match(/^\/(?:[a-z]{2}\/)?(track|album|artist|playlist)\/(\d+)\/?$/)
 		if (!match) throw new Error('URL not supported')
 
 		const [, type, id] = match
@@ -315,6 +324,29 @@ export default class Deezer implements StreamerWithLogin {
 		if (!data.metadata.trackCount) data.metadata.trackCount = data.tracks.length
 
 		return data
+	}
+
+	// Playlist
+
+	async #getPlaylist(id: number): Promise<PlaylistGetByUrlResponse> {
+		const playlistMetadata = (
+			await this.#apiCall('deezer.pagePlaylist', {
+				playlist_id: id
+			})
+		).DATA
+		const playlistTracks = (
+			await this.#apiCall('playlist.getSongs', {
+				playlist_id: id,
+				nb: 9999,
+				start: 0
+			})
+		).data
+
+		return {
+			type: 'playlist',
+			metadata: parsePlaylistMetadata(playlistMetadata),
+			tracks: playlistTracks.map(parseTrack)
+		}
 	}
 
 	// Track
@@ -500,6 +532,9 @@ export default class Deezer implements StreamerWithLogin {
 						return this.#getStream(track)
 					}
 				}
+			}
+			case 'playlist': {
+				return await this.#getPlaylist(id)
 			}
 			default:
 				throw new Error('URL unrecognised')

@@ -10,7 +10,16 @@ import {
 	StreamerAccount
 } from '../../types.js'
 import { DEFAULT_HEADERS } from './constants.js'
-import { parseAlbum, parseTrack, parseArtist, RawAlbum, RawArtist, RawTrack } from './parse.js'
+import {
+	parseAlbum,
+	parseTrack,
+	parseArtist,
+	RawAlbum,
+	RawArtist,
+	RawTrack,
+	RawPlaylist,
+	parsePlaylist
+} from './parse.js'
 import { Readable } from 'stream'
 
 function headers(token?: string): HeadersInit {
@@ -207,6 +216,7 @@ export default class Qobuz implements StreamerWithLogin {
 			app_id: this.appId
 		})
 		return {
+			type: 'album',
 			metadata: { ...parseAlbum(albumResponse), trackCount: albumResponse.tracks?.items.length },
 			tracks: albumResponse.tracks?.items.map(parseTrack)
 		}
@@ -224,7 +234,21 @@ export default class Qobuz implements StreamerWithLogin {
 		)
 	}
 
-	#getUrlParts(url: string): ['artist' | 'album' | 'track', string] {
+	async #getPlaylist(id: string) {
+		const init = <RawPlaylist>await this.#get('playlist/get', {
+			playlist_id: id,
+			extra: 'tracks,getSimilarPlaylists',
+			offset: 0,
+			limit: 1000,
+			app_id: this.appId
+		})
+
+		if (init.tracks_count > 1000)
+			throw new Error('To be added, playlists with over a thousand tracks.')
+		else return parsePlaylist(init)
+	}
+
+	#getUrlParts(url: string): ['artist' | 'album' | 'track' | 'playlist', string] {
 		const urlObj = new URL(url)
 		if (urlObj.hostname == 'www.qobuz.com' || urlObj.hostname == 'qobuz.com') {
 			const urlParts = url
@@ -239,6 +263,8 @@ export default class Qobuz implements StreamerWithLogin {
 				case 'album':
 				case 'track':
 					return [type, id]
+				case 'playlists':
+					return ['playlist', id]
 				default:
 					throw new Error('URL unrecognised')
 			}
@@ -248,7 +274,12 @@ export default class Qobuz implements StreamerWithLogin {
 			?.slice(1, 3)
 		if (!urlParts) throw new Error('URL not supported')
 		urlParts[1] = urlParts[1].replace(/\?.*?$/, '')
-		if (urlParts[0] != 'artist' && urlParts[0] != 'album' && urlParts[0] != 'track') {
+		if (
+			urlParts[0] != 'artist' &&
+			urlParts[0] != 'album' &&
+			urlParts[0] != 'track' &&
+			urlParts[0] != 'playlist'
+		) {
 			throw new Error('URL unrecognised')
 		}
 		return [urlParts[0], urlParts[1]]
@@ -281,6 +312,9 @@ export default class Qobuz implements StreamerWithLogin {
 					type,
 					metadata: await this.#getArtistMetadata(id)
 				}
+			}
+			case 'playlist': {
+				return await this.#getPlaylist(id)
 			}
 			default:
 				throw new Error('URL unrecognised')

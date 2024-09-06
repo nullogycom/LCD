@@ -1,4 +1,4 @@
-import { Artist, Album, Track } from '../../types.js'
+import { Artist, Album, Track, PlaylistGetByUrlResponse } from '../../types.js'
 
 export interface RawArtist {
 	id: number
@@ -153,4 +153,38 @@ function parsePerformers(performers: string, track: Track) {
 	}
 
 	return track
+}
+
+export interface RawPlaylist {
+	owner: {
+		id: number
+		name: string
+	}
+	id: number
+	name: string
+	images: string[]
+	is_collaborative: boolean
+	description: string
+	created_at: number
+	duration: number
+	tracks_count: number
+	tracks: {
+		offset?: number
+		limit?: number
+		total?: number
+		items: RawTrack[]
+	}
+}
+
+export function parsePlaylist(raw: RawPlaylist) {
+	return <PlaylistGetByUrlResponse>{
+		type: 'playlist',
+		metadata: {
+			id: raw.id,
+			title: raw.name,
+			trackCount: raw?.tracks_count || raw?.tracks?.total,
+			url: `https://open.qobuz.com/playlist/${raw.id}`
+		},
+		tracks: raw.tracks?.items.map(parseTrack)
+	}
 }
