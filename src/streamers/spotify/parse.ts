@@ -99,7 +99,8 @@ export function parsePlaylist(raw: SpotifyPlaylist) {
 		id: raw.id,
 		title: raw.name,
 		url: raw.externalUrl,
-		trackCount: raw.totalTracks
+		trackCount: raw.totalTracks,
+		coverArtwork: parseThumbnails(raw.coverArtwork)
 	}
 
 	return playlist
