@@ -97,8 +97,7 @@ export function parsePlaylist(raw: RawPlaylist): Playlist {
 		id: raw.uuid,
 		title: raw.title,
 		url: raw.url,
-		trackCount: raw.numberOfTracks,
-		tracks: []
+		trackCount: raw.numberOfTracks
 	}
 
 	playlist.coverArtwork = [

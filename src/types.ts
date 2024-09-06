@@ -36,7 +36,6 @@ export interface Playlist {
 	url: string
 	coverArtwork?: CoverArtwork[]
 	trackCount?: number
-	tracks: Track[]
 }
 
 export interface Album {
