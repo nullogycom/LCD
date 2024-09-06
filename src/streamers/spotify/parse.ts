@@ -4,9 +4,10 @@ import type {
 	SpotifyThumbnail,
 	SpotifyTrack,
 	SpotifyEpisode,
-	SpotifyPodcast
+	SpotifyPodcast,
+	SpotifyPlaylist
 } from 'librespot/types'
-import { Album, Artist, Episode, Podcast, Track } from '../../types.js'
+import { Album, Artist, Episode, Playlist, Podcast, Track } from '../../types.js'
 
 function parseThumbnails(raw: SpotifyThumbnail[]) {
 	return raw
@@ -91,4 +92,15 @@ export function parsePodcast(raw: SpotifyPodcast) {
 	if (raw.episodes) podcast.episodes = raw.episodes.map((e) => parseEpisode(e))
 
 	return podcast
+}
+
+export function parsePlaylist(raw: SpotifyPlaylist) {
+	const playlist: Playlist = {
+		id: raw.id,
+		title: raw.name,
+		url: raw.externalUrl,
+		trackCount: raw.totalTracks
+	}
+
+	return playlist
 }

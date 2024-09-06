@@ -1,6 +1,6 @@
 type Id = string | number
 
-export type ItemType = 'artist' | 'album' | 'track' | 'episode' | 'podcast'
+export type ItemType = 'artist' | 'album' | 'track' | 'episode' | 'podcast' | 'playlist'
 export type Region = string
 
 export interface CoverArtwork {
@@ -28,6 +28,14 @@ export interface Artist {
 	name: string
 	albums?: Album[]
 	tracks?: Track[]
+}
+
+export interface Playlist {
+	id: Id
+	title: string
+	url: string
+	coverArtwork?: CoverArtwork[]
+	trackCount?: number
 }
 
 export interface Album {
@@ -118,6 +126,7 @@ export type GetByUrlResponse =
 	| AlbumGetByUrlResponse
 	| EpisodeGetByUrlResponse
 	| PodcastGetByUrlResponse
+	| PlaylistGetByUrlResponse
 
 export interface TrackGetByUrlResponse {
 	type: 'track'
@@ -137,6 +146,11 @@ export interface AlbumGetByUrlResponse {
 	type: 'album'
 	tracks: Track[]
 	metadata: Album
+}
+export interface PlaylistGetByUrlResponse {
+	type: 'playlist'
+	tracks: Track[]
+	metadata: Playlist
 }
 export interface PodcastGetByUrlResponse {
 	type: 'podcast'
