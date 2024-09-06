@@ -5,8 +5,13 @@ import {
 	ItemType,
 	SearchResults,
 	StreamerAccount,
-	StreamerWithLogin
+	StreamerWithLogin,
+	Track
 } from '../../types.js'
+
+interface SpotifyOptions extends LibrespotOptions {
+	storedCredential?: boolean
+}
 
 class Spotify implements StreamerWithLogin {
 	client: Librespot
@@ -26,11 +31,15 @@ class Spotify implements StreamerWithLogin {
 		}
 	} as const
 
-	constructor(options: LibrespotOptions) {
+	storedCredential: boolean
+
+	constructor(options: SpotifyOptions) {
 		this.client = new Librespot(options)
+		this.storedCredential = options.storedCredential == true
 	}
-	login(username: string, password: string) {
-		return this.client.login(username, password)
+	async login(username: string, password: string) {
+		if (this.storedCredential) return await this.client.loginWithStoredCreds(username, password)
+		else return await this.client.login(username, password)
 	}
 	#getUrlParts(url: string): ['artist' | 'album' | 'track' | 'episode' | 'show', string] {
 		const urlObj = new URL(url)
@@ -133,6 +142,11 @@ class Spotify implements StreamerWithLogin {
 			artists: results.artists?.map((e) => parseArtist(e)) ?? [],
 			tracks: results.tracks?.map((e) => parseTrack(e)) ?? []
 		}
+	}
+	async isrcLookup(isrc: string): Promise<Track> {
+		const results = await this.search(`isrc:${isrc}`)
+		if (results?.tracks[0]) return <Track>(await this.getByUrl(results.tracks?.[0]?.url)).metadata
+		else throw new Error(`Not available on Spotify.`)
 	}
 	async getAccountInfo(): Promise<StreamerAccount> {
 		const info = await this.client.get.me()

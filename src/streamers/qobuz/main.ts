@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { fetch } from 'undici'
+import { fetch, Dispatcher } from 'undici'
 import {
 	ItemType,
 	StreamerWithLogin,
@@ -27,6 +27,7 @@ interface QobuzOptions {
 	appSecret: string
 	appId: string
 	token?: string
+	dispatcher?: Dispatcher
 }
 
 interface LoginResponse {
@@ -66,11 +67,13 @@ export default class Qobuz implements StreamerWithLogin {
 	token?: string
 	appSecret: string
 	appId: string
+	dispatcher: Dispatcher | undefined
 	fetch?(url: URL | RequestInfo, init?: RequestInit): Promise<Response>
 	constructor(options: QobuzOptions) {
 		this.appSecret = options.appSecret
 		this.appId = options.appId
 		if (options.token) this.token = options.token
+		if (options.dispatcher) this.dispatcher = options.dispatcher
 	}
 
 	async #get(url: string, params: { [key: string]: string | number }) {
@@ -83,7 +86,8 @@ export default class Qobuz implements StreamerWithLogin {
 			)}`,
 			{
 				method: 'get',
-				headers: headers(this.token)
+				headers: headers(this.token),
+				dispatcher: this.dispatcher
 			}
 		)
 		if (!response.ok) {
@@ -179,7 +183,7 @@ export default class Qobuz implements StreamerWithLogin {
 		)
 		if (trackFileResponse.sample == true)
 			throw new Error(`Could not get non-sample file. Make sure the track isn't purchase-only.`)
-		const streamResponse = await fetch(trackFileResponse.url)
+		const streamResponse = await fetch(trackFileResponse.url, { dispatcher: this.dispatcher })
 		return {
 			mimeType: trackFileResponse.mime_type,
 			sizeBytes: parseInt(<string>streamResponse.headers.get('Content-Length')),
@@ -203,7 +207,7 @@ export default class Qobuz implements StreamerWithLogin {
 			app_id: this.appId
 		})
 		return {
-			metadata: parseAlbum(albumResponse),
+			metadata: { ...parseAlbum(albumResponse), trackCount: albumResponse.tracks?.items.length },
 			tracks: albumResponse.tracks?.items.map(parseTrack)
 		}
 	}
@@ -294,6 +298,14 @@ export default class Qobuz implements StreamerWithLogin {
 			premium: loginResponse.user.credential.parameters.hires_streaming,
 			country: loginResponse.user.country,
 			explicit: true
+		}
+	}
+	async isrcLookup(isrc: string): Promise<Track> {
+		const isrcUrl = (await this.search(isrc)).tracks?.[0]?.url
+		if (!isrcUrl) throw new Error(`Not available on Qobuz.`)
+		else {
+			const track = <Track>(await this.getByUrl(isrcUrl)).metadata
+			return track
 		}
 	}
 }

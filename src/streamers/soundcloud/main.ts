@@ -1,4 +1,4 @@
-import { fetch, HeadersInit } from 'undici'
+import { Dispatcher, fetch, HeadersInit } from 'undici'
 import { DEFAULT_HEADERS } from './constants.js'
 import {
 	ItemType,
@@ -30,6 +30,7 @@ function headers(oauthToken?: string | undefined): HeadersInit {
 
 interface SoundcloudOptions {
 	oauthToken?: string
+	dispatcher: Dispatcher | undefined
 }
 
 interface SoundcloudTranscoding {
@@ -56,7 +57,7 @@ interface SoundCloudSubscriptionData {
 }
 
 export default class Soundcloud implements Streamer {
-	hostnames = ['soundcloud.com', 'm.soundcloud.com', 'www.soundcloud.com']
+	hostnames = ['soundcloud.com', 'm.soundcloud.com', 'www.soundcloud.com', 'on.soundcloud.com']
 	testData = {
 		'https://soundcloud.com/saoirsedream/charlikartlanparty': {
 			type: 'track',
@@ -69,8 +70,10 @@ export default class Soundcloud implements Streamer {
 	} as const
 	oauthToken?: string
 	client?: ScClient
+	dispatcher: Dispatcher | undefined
 	constructor(options: SoundcloudOptions) {
 		this.oauthToken = options?.oauthToken
+		this.dispatcher = options?.dispatcher
 	}
 	async search(query: string, limit = 20): Promise<SearchResults> {
 		const client = this.client || (await this.#getClient())
@@ -81,7 +84,7 @@ export default class Soundcloud implements Streamer {
 				)}&offset=0&linked_partitioning=1&app_locale=en&limit=${limit}`,
 				client
 			),
-			{ method: 'get', headers: headers(this.oauthToken) }
+			{ method: 'get', headers: headers(this.oauthToken), dispatcher: this.dispatcher }
 		)
 		if (!response.ok) {
 			const errMsg = await response.text()
@@ -116,7 +119,8 @@ export default class Soundcloud implements Streamer {
 		const response = await (
 			await fetch(`https://soundcloud.com/`, {
 				method: 'get',
-				headers: headers()
+				headers: headers(this.oauthToken),
+				dispatcher: this.dispatcher
 			})
 		).text()
 
@@ -140,6 +144,9 @@ export default class Soundcloud implements Streamer {
 	}
 
 	async getByUrl(url: string): Promise<GetByUrlResponse> {
+		const { hostname } = new URL(url)
+
+		if (hostname == 'on.soundcloud.com') url = await followRedirect(url)
 		return await this.#getMetadata(url)
 	}
 
@@ -163,11 +170,24 @@ export default class Soundcloud implements Streamer {
 		url = url.replace('//m.', '//')
 
 		// getting the IDs and track authorization
-		const html = await (await fetch(url, { method: 'get', headers: headers() })).text()
+		const html = await (
+			await fetch(url, {
+				method: 'get',
+				headers: headers(this.oauthToken),
+				dispatcher: this.dispatcher
+			})
+		).text()
 
 		switch (type) {
 			case 'track': {
-				const trackId = html.split(`"soundcloud://sounds:`)?.[1]?.split(`">`)?.[0]
+				let trackId = html.split('"soundcloud://sounds:')?.[1]?.split('">')?.[0]
+				if (!trackId)
+					trackId = html
+						.split(
+							'content="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F'
+						)?.[1]
+						?.split('%3F')[0]
+				if (!trackId) throw new Error('Could not extract track ID.')
 
 				let naked = `https://api-v2.soundcloud.com/tracks/${trackId}`
 				const path = new URL(url).pathname
@@ -177,7 +197,8 @@ export default class Soundcloud implements Streamer {
 					await (
 						await fetch(this.#formatURL(naked, client), {
 							method: 'get',
-							headers: headers(this.oauthToken)
+							headers: headers(this.oauthToken),
+							dispatcher: this.dispatcher
 						})
 					).text()
 				)
@@ -240,7 +261,7 @@ export default class Soundcloud implements Streamer {
 				}
 			}
 			default:
-				throw `Type "${type}" not supported.`
+				throw new Error(`Type "${type}" not supported.`)
 		}
 	}
 	async #getRawTrackInfo(id: number | string, client: ScClient) {
@@ -248,7 +269,8 @@ export default class Soundcloud implements Streamer {
 			await (
 				await fetch(this.#formatURL(`https://api-v2.soundcloud.com/tracks/${id}`, client), {
 					method: 'get',
-					headers: headers(this.oauthToken)
+					headers: headers(this.oauthToken),
+					dispatcher: this.dispatcher
 				})
 			).text()
 		)
@@ -265,7 +287,8 @@ export default class Soundcloud implements Streamer {
 				),
 				{
 					method: 'get',
-					headers: headers(this.oauthToken)
+					headers: headers(this.oauthToken),
+					dispatcher: this.dispatcher
 				}
 			)
 		).json()
@@ -315,14 +338,15 @@ async function getStream(
 	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('mp3_')) // then mp3
 	if (filter.length == 0) filter = transcodings.filter((x) => x.preset.startsWith('opus_')) // then opus
 	if (filter.length == 0) throw new Error('Could not find applicable format.') // and this is just in case none of those exist
-
 	const transcoding = filter[0]
-	const streamUrlResp = await fetch(
-		`${transcoding.url}?client_id=${client.id}&track_authorization=${trackAuth}`,
-		{
-			headers: headers(oauthToken)
-		}
-	)
+
+	const streamUrl = new URL(transcoding.url)
+	if (client?.id) streamUrl.searchParams.append('client_id', client?.id)
+	streamUrl.searchParams.append('track_authorization', trackAuth)
+
+	const streamUrlResp = await fetch(streamUrl.toString(), {
+		headers: headers(oauthToken)
+	})
 	const json = <{ url: string }>await streamUrlResp.json()
 	if (!json.url) throw new Error('Stream URL could not be retreieved.')
 
@@ -334,11 +358,21 @@ async function getStream(
 			stream: Readable.fromWeb(streamResp.body!)
 		}
 	} else {
-		const container = transcoding.format.mime_type.split('/')[1].split(';')[0].split('+')[0]
+		let container = transcoding.format.mime_type.split('/')[1].split(';')[0].split('+')[0]
+		if (container == 'mpeg') container = 'mp3'
 
 		return {
 			mimeType: transcoding.format.mime_type,
 			stream: await parseHls(json.url, container)
 		}
 	}
+}
+
+async function followRedirect(url: string) {
+	const res = await fetch(url, { redirect: 'manual' })
+	const location = res.headers.get('Location')
+
+	if (res.status != 302 || !location) throw new Error('URL not supported')
+
+	return location
 }

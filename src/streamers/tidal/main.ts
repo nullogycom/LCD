@@ -1,4 +1,4 @@
-import { fetch } from 'undici'
+import { Dispatcher, fetch } from 'undici'
 import { spawn } from 'child_process'
 import os from 'node:os'
 import fs from 'node:fs'
@@ -34,6 +34,7 @@ interface TidalOptions {
 	refreshToken: string
 	expires: number
 	countryCode: string
+	dispatcher?: Dispatcher
 }
 
 interface LoginData {
@@ -65,6 +66,24 @@ interface SubscriptionData {
 	paymentOverdue: boolean
 }
 
+interface RawSearchResults {
+	albums: {
+		items: RawAlbum[]
+	}
+	artists: {
+		items: RawArtist[]
+	}
+	tracks: {
+		items: RawTrack[]
+	}
+}
+
+interface RawIsrcLookup {
+	limit: number
+	offset: number
+	items: RawTrack[]
+}
+
 export default class Tidal implements Streamer {
 	tvToken: string
 	tvSecret: string
@@ -73,6 +92,7 @@ export default class Tidal implements Streamer {
 	expires: number
 	countryCode: string
 	userId: number | undefined
+	dispatcher: Dispatcher | undefined
 	hostnames = ['tidal.com', 'www.tidal.com', 'listen.tidal.com']
 	testData = {
 		'https://tidal.com/browse/artist/3908662': {
@@ -98,6 +118,7 @@ export default class Tidal implements Streamer {
 		this.refreshToken = options.refreshToken
 		this.expires = options.expires
 		this.countryCode = options.countryCode
+		if (options.dispatcher) this.dispatcher = options.dispatcher
 
 		const getReady = async () => {
 			if (!this.refreshToken) return
@@ -114,6 +135,11 @@ export default class Tidal implements Streamer {
 			'Accept-Encoding': 'gzip',
 			'User-Agent': 'TIDAL_ANDROID/1039 okhttp/3.14.9'
 		}
+	}
+	async isrcLookup(isrc: string): Promise<Track> {
+		const isrcQuery = <RawIsrcLookup>await this.#get('tracks', { isrc })
+		if (isrcQuery?.items?.[0]) return <Track>(await this.getByUrl(isrcQuery.items[0].url)).metadata
+		else throw new Error(`Not available on Tidal.`)
 	}
 	async #get(
 		url: string,
@@ -132,7 +158,8 @@ export default class Tidal implements Streamer {
 		const response = await fetch(
 			`${base}${url}?${new URLSearchParams(<{ [key: string]: string }>params)}`,
 			{
-				headers: this.headers()
+				headers: this.headers(),
+				dispatcher: this.dispatcher
 			}
 		)
 		if (!response.ok) {
@@ -158,13 +185,15 @@ export default class Tidal implements Streamer {
 	}
 	async sessionValid() {
 		const resp = await fetch('https://api.tidal.com/v1/sessions', {
-			headers: this.headers()
+			headers: this.headers(),
+			dispatcher: this.dispatcher
 		})
 		return resp.ok
 	}
 	async getCountryCode() {
 		const sessionResponse = await fetch('https://api.tidal.com/v1/sessions', {
-			headers: this.headers()
+			headers: this.headers(),
+			dispatcher: this.dispatcher
 		})
 		if (sessionResponse.status != 200) return false
 		const sessionData = <SessionData>await sessionResponse.json()
@@ -178,7 +207,8 @@ export default class Tidal implements Streamer {
 			body: new URLSearchParams({
 				client_id: this.tvToken,
 				scope: 'r_usr w_usr'
-			})
+			}),
+			dispatcher: this.dispatcher
 		})
 		if (deviceAuthResponse.status != 200) throw new Error(`Couldn't authorize Tidal`)
 		interface DeviceAuth {
@@ -201,7 +231,8 @@ export default class Tidal implements Streamer {
 				await new Promise((r) => setTimeout(r, 1000))
 				const loginResponse = await fetch(`${TIDAL_AUTH_BASE}oauth2/token`, {
 					method: 'post',
-					body: new URLSearchParams(params)
+					body: new URLSearchParams(params),
+					dispatcher: this.dispatcher
 				})
 				statusCode = loginResponse.status
 				loginData = <LoginData>await loginResponse.json()
@@ -237,7 +268,8 @@ export default class Tidal implements Streamer {
 				client_id: this.tvToken,
 				client_secret: this.tvSecret,
 				grant_type: 'refresh_token'
-			})
+			}),
+			dispatcher: this.dispatcher
 		})
 
 		if (refreshResponse.status == 200) {
@@ -250,17 +282,6 @@ export default class Tidal implements Streamer {
 		return false
 	}
 	async search(query: string, limit = 20): Promise<SearchResults> {
-		interface RawSearchResults {
-			albums: {
-				items: RawAlbum[]
-			}
-			artists: {
-				items: RawArtist[]
-			}
-			tracks: {
-				items: RawTrack[]
-			}
-		}
 		const results = <RawSearchResults>await this.#get('search/top-hits', {
 			query: query,
 			limit: limit,
@@ -366,7 +387,7 @@ export default class Tidal implements Streamer {
 
 		if (playbackInfoResponse.manifestMimeType != 'application/dash+xml') {
 			const manifest = <Manifest>JSON.parse(manifestStr)
-			const streamResponse = await fetch(manifest.urls[0])
+			const streamResponse = await fetch(manifest.urls[0], { dispatcher: this.dispatcher })
 			return {
 				mimeType: manifest.mimeType,
 				sizeBytes: parseInt(<string>streamResponse.headers.get('Content-Length')),
@@ -505,10 +526,12 @@ export default class Tidal implements Streamer {
 					metadata: await this.#getTrack(id)
 				}
 			case 'album':
+				// eslint-disable-next-line no-case-declarations
+				const tracks = await this.#getAlbumTracks(id)
 				return {
 					type,
-					tracks: await this.#getAlbumTracks(id),
-					metadata: await this.#getAlbum(id)
+					tracks: tracks,
+					metadata: { ...(await this.#getAlbum(id)), trackCount: tracks.length }
 				}
 			case 'artist':
 				return {
@@ -527,7 +550,8 @@ export default class Tidal implements Streamer {
 		if (this.userId == undefined || this.countryCode == undefined) {
 			if (Date.now() > this.expires) await this.refresh()
 			const sessionResponse = await fetch('https://api.tidal.com/v1/sessions', {
-				headers: this.headers()
+				headers: this.headers(),
+				dispatcher: this.dispatcher
 			})
 			const sessionData = <SessionData>await sessionResponse.json()
 

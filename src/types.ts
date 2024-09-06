@@ -9,6 +9,18 @@ export interface CoverArtwork {
 	height: number
 }
 
+export interface Lyrics {
+	id: Id
+	source: string
+	lines?: LyricLine[]
+}
+
+export interface LyricLine {
+	text: string
+	startTimeMs?: number
+	endTimeMs?: number
+}
+
 export interface Artist {
 	id: Id
 	url: string
@@ -62,10 +74,11 @@ export interface Track {
 	album?: Album
 	durationMs?: number
 	coverArtwork?: CoverArtwork[]
+	lyrics?: Lyrics
 	genres?: string[]
 	releaseDate?: Date
-	regions?: string[]
 	description?: string
+	regions?: string[]
 }
 
 export interface Episode {
@@ -164,6 +177,7 @@ export interface Streamer {
 	hostnames: string[]
 	testData?: StreamerTestData
 	search(query: string, limit: number): Promise<SearchResults>
+	isrcLookup?(isrc: string): Promise<Track>
 	getTypeFromUrl(url: string): Promise<ItemType>
 	getByUrl:
 		| ((url: string) => Promise<GetByUrlResponse>)
