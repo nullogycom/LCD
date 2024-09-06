@@ -17,7 +17,8 @@ import {
 } from '../../types.js'
 
 interface SpotifyOptions extends LibrespotOptions {
-	storedCredential?: boolean
+	username?: string
+	storedCredential?: string
 }
 
 class Spotify implements StreamerWithLogin {
@@ -38,15 +39,26 @@ class Spotify implements StreamerWithLogin {
 		}
 	} as const
 
-	storedCredential: boolean
+	loggedIn = false
 
 	constructor(options: SpotifyOptions) {
 		this.client = new Librespot(options)
-		this.storedCredential = options.storedCredential == true
+
+		const { username, storedCredential } = options
+		if (username && storedCredential) {
+			this.client.loginWithStoredCreds(username, storedCredential)
+			this.loggedIn = true
+		}
 	}
 	async login(username: string, password: string) {
-		if (this.storedCredential) return await this.client.loginWithStoredCreds(username, password)
-		else return await this.client.login(username, password)
+		if (!this.loggedIn) {
+			const result = await this.client.login(username, password)
+			this.loggedIn = true
+			return result
+		}
+	}
+	getStoredCredentials() {
+		return this.client.getStoredCredentials()
 	}
 	#getUrlParts(
 		url: string
