@@ -457,7 +457,14 @@ export default class Deezer implements StreamerWithLogin {
 		})
 
 		return {
-			stream: Readable.fromWeb(streamResp.body!).pipe(decryption),
+			stream: Readable.fromWeb(streamResp.body!)
+				.on('error', function (e) {
+					throw new Error('Error while downloading track stream:' + e)
+				})
+				.pipe(decryption)
+				.on('error', function (e) {
+					throw new Error('Error while decrypting track stream:' + e)
+				}),
 			mimeType
 		}
 	}
