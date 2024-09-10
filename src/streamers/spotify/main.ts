@@ -39,23 +39,20 @@ class Spotify implements StreamerWithLogin {
 		}
 	} as const
 
-	loggedIn = false
+	username?: string
+	storedCredential?: string
 
 	constructor(options: SpotifyOptions) {
 		this.client = new Librespot(options)
 
 		const { username, storedCredential } = options
-		if (username && storedCredential) {
-			this.client.loginWithStoredCreds(username, storedCredential)
-			this.loggedIn = true
-		}
+		this.username = username
+		this.storedCredential = storedCredential
 	}
 	async login(username: string, password: string) {
-		if (!this.loggedIn) {
-			const result = await this.client.login(username, password)
-			this.loggedIn = true
-			return result
-		}
+		if (this.username && this.storedCredential)
+			return await this.client.loginWithStoredCreds(this.username, this.storedCredential)
+		else return await this.client.login(username, password)
 	}
 	getStoredCredentials() {
 		return this.client.getStoredCredentials()
