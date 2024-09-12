@@ -189,9 +189,6 @@ class Spotify implements StreamerWithLogin {
 			explicit: info.allowExplicit
 		}
 	}
-	disconnect() {
-		return this.client.disconnect()
-	}
 }
 
 export default Spotify

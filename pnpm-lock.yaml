@@ -15,8 +15,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
       librespot:
-        specifier: ^0.2.16
-        version: 0.2.16
+        specifier: ^0.2.17
+        version: 0.2.17
       undici:
         specifier: ^6.19.4
         version: 6.19.4
@@ -342,10 +342,6 @@ packages:
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
 
-  fast-xml-parser@4.3.4:
-    resolution: {integrity: sha512-utnwm92SyozgA3hhH2I8qldf2lBqm6qHOICawRNRFu1qMe3+oqr+GcXjGqTmXTMGE5T4eC03kr/rlh5C1IRdZA==}
-    hasBin: true
-
   fastq@1.17.1:
     resolution: {integrity: sha512-sRVD3lWVIXWg6By68ZN7vho9a1pQcN/WBFaAAsDDFzlJjvoGx0P8z7V1t72grFJfJhu3YPZBuu25f7Kaw2jN1w==}
 
@@ -464,8 +460,8 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
-  librespot@0.2.16:
-    resolution: {integrity: sha512-fvVZO1bouQr3qtU7h+AHOrUqiEwKEUZkjH1LWp35MOnG193K+SVcFHx6y8QmcX7sxn9/ODKGT1XET/uJE5z4Mw==}
+  librespot@0.2.17:
+    resolution: {integrity: sha512-daSvrKh22gFDurCrn3LpVHSV0gjNK6XN9h0nlrIcydOjgNOGHlpIRTmr62OVLtkmkL52Azod9q5JCtF6bnsuhQ==}
 
   locate-path@6.0.0:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
@@ -501,9 +497,6 @@ packages:
 
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
-
-  node-addon-api@1.7.2:
-    resolution: {integrity: sha512-ibPK3iA+vaY1eEjESkQkM0BbCqFOaZMiXRTtdB0u7b4djtY6JnsjvPdUHVMg6xQt3B8fpTTWHI9A+ADjM9frzg==}
 
   node-addon-api@8.1.0:
     resolution: {integrity: sha512-yBY+qqWSv3dWKGODD6OGE6GnTX7Q2r+4+DfpqxHSHh8x0B4EKP9+wVGLS6U/AM1vxSNNmUEuIV5EGhYwPpfOwQ==}
@@ -591,9 +584,6 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  shannon-bindings@0.1.0:
-    resolution: {integrity: sha512-svz5ewuAGfrxibOe5GVfPfvjs8FwHEixTW2K3cUEDDt6tCnxTsFzqi0JoQ//45EGYoxxjX2uES3msWE41XVaIQ==}
-
   shebang-command@2.0.0:
     resolution: {integrity: sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA==}
     engines: {node: '>=8'}
@@ -613,9 +603,6 @@ packages:
   strip-json-comments@3.1.1:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
-
-  strnum@1.0.5:
-    resolution: {integrity: sha512-J8bbNyKKXl5qYcR36TIO8W3mVGVHrmmxsd5PAItGkmyzwJvybiw2IVq5nqd0i4LSNSkB/sx9VHllbfFdr9k1JA==}
 
   supports-color@7.2.0:
     resolution: {integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==}
@@ -1020,10 +1007,6 @@ snapshots:
 
   fast-levenshtein@2.0.6: {}
 
-  fast-xml-parser@4.3.4:
-    dependencies:
-      strnum: 1.0.5
-
   fastq@1.17.1:
     dependencies:
       reusify: 1.0.4
@@ -1138,11 +1121,9 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  librespot@0.2.16:
+  librespot@0.2.17:
     dependencies:
-      fast-xml-parser: 4.3.4
       protobufjs: 7.2.6
-      shannon-bindings: 0.1.0
       undici: 5.28.3
       unplayplay: 1.0.2
 
@@ -1176,8 +1157,6 @@ snapshots:
   ms@2.1.2: {}
 
   natural-compare@1.4.0: {}
-
-  node-addon-api@1.7.2: {}
 
   node-addon-api@8.1.0: {}
 
@@ -1259,10 +1238,6 @@ snapshots:
     dependencies:
       lru-cache: 6.0.0
 
-  shannon-bindings@0.1.0:
-    dependencies:
-      node-addon-api: 1.7.2
-
   shebang-command@2.0.0:
     dependencies:
       shebang-regex: 3.0.0
@@ -1276,8 +1251,6 @@ snapshots:
       ansi-regex: 5.0.1
 
   strip-json-comments@3.1.1: {}
-
-  strnum@1.0.5: {}
 
   supports-color@7.2.0:
     dependencies:
