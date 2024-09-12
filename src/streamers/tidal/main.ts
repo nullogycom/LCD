@@ -119,14 +119,6 @@ export default class Tidal implements Streamer {
 		this.expires = options.expires
 		this.countryCode = options.countryCode
 		if (options.dispatcher) this.dispatcher = options.dispatcher
-
-		const getReady = async () => {
-			if (!this.refreshToken) return
-			if (await this.sessionValid()) return
-			const success = await this.refresh()
-			if (!success) console.log(`[tidal] Failed to refresh tokens, this could be a bad sign`)
-		}
-		getReady()
 	}
 	headers() {
 		return {
