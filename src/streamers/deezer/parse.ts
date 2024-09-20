@@ -1,4 +1,4 @@
-import { Album, Artist, CoverArtwork, Playlist, Track } from '../../types.js'
+import { Album, Artist, CoverArtwork, LyricLine, Playlist, Track } from '../../types.js'
 import { SIZES } from './constants.js'
 
 export enum DeezerFormat {
@@ -69,7 +69,7 @@ export function parseArtist(
 		)
 
 	let parsedTracks
-	if (tracks) parsedTracks = tracks.map(parseTrack)
+	if (tracks) parsedTracks = tracks.map((t) => parseTrack(t))
 
 	let parsedAlbums
 	if (albums) parsedAlbums = albums.map(parseAlbum)
@@ -142,7 +142,20 @@ export interface DeezerTrack {
 	FALLBACK?: DeezerTrack
 }
 
-export function parseTrack(track: DeezerTrack): Track {
+export interface DeezerLyrics {
+	LYRICS_ID: string
+	LYRICS_SYNC_JSON: DeezerSyncedLine[]
+	LYRICS_TEXT: string
+}
+
+export interface DeezerSyncedLine {
+	lrc_timestamp?: string
+	milliseconds?: string
+	duration?: string
+	line: string
+}
+
+export function parseTrack(track: DeezerTrack, lyricsData?: DeezerLyrics): Track {
 	const addt: {
 		regions?: string[]
 		copyright?: string
@@ -157,6 +170,39 @@ export function parseTrack(track: DeezerTrack): Track {
 	if (track.SNG_CONTRIBUTORS?.producer) addt.producers = track.SNG_CONTRIBUTORS?.producer
 	if (track.SNG_CONTRIBUTORS?.composer) addt.composers = track.SNG_CONTRIBUTORS?.composer
 	if (track.SNG_CONTRIBUTORS?.composer) addt.lyricists = track.SNG_CONTRIBUTORS?.lyricist
+
+	let lyrics
+	if (lyricsData) {
+		const lines: LyricLine[] = []
+
+		const syncedLyrics = lyricsData.LYRICS_SYNC_JSON
+		if (syncedLyrics) {
+			let lastLineEnd = 0
+			for (const line of syncedLyrics) {
+				if (!line.line) {
+					const lastLine = lines[lines.length - 1]
+					if (lastLine) lastLine.endTimeMs = lastLineEnd
+					continue
+				}
+
+				lines.push({
+					text: line.line,
+					startTimeMs: parseInt(line.milliseconds!)
+				})
+				lastLineEnd = parseInt(line.milliseconds!) + parseInt(line.duration!)
+			}
+		} else {
+			lines.push({
+				text: lyricsData.LYRICS_TEXT
+			})
+		}
+
+		lyrics = {
+			id: lyricsData.LYRICS_ID,
+			source: 'deezer',
+			lines
+		}
+	}
 
 	return {
 		title: track.VERSION ? `${track.SNG_TITLE} ${track.VERSION}` : track.SNG_TITLE,
@@ -174,6 +220,7 @@ export function parseTrack(track: DeezerTrack): Track {
 		}),
 		durationMs: parseInt(track.DURATION) * 1e3,
 		coverArtwork: parseArtwork(track.ALB_PICTURE),
+		lyrics,
 		...addt
 	}
 }

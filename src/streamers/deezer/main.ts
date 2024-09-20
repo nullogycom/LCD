@@ -25,7 +25,8 @@ import {
 	parseAlbum,
 	parseArtist,
 	parseTrack,
-	parsePlaylistMetadata
+	parsePlaylistMetadata,
+	DeezerLyrics
 } from './parse.js'
 import { Readable, Transform } from 'stream'
 import { Blowfish } from 'blowfish-cbc'
@@ -51,6 +52,7 @@ interface APIMethod {
 	}
 	'deezer.pageTrack': {
 		DATA: DeezerTrack
+		LYRICS?: DeezerLyrics
 	}
 	'deezer.pagePlaylist': {
 		DATA: DeezerPlaylistMetadata
@@ -318,7 +320,7 @@ export default class Deezer implements StreamerWithLogin {
 
 		const data = {
 			metadata: { ...parseAlbum(DATA), trackCount: SONGS.data.length },
-			tracks: SONGS.data.map(parseTrack)
+			tracks: SONGS.data.map((t) => parseTrack(t))
 		}
 
 		if (!data.metadata.trackCount) data.metadata.trackCount = data.tracks.length
@@ -345,18 +347,16 @@ export default class Deezer implements StreamerWithLogin {
 		return {
 			type: 'playlist',
 			metadata: parsePlaylistMetadata(playlistMetadata),
-			tracks: playlistTracks.map(parseTrack)
+			tracks: playlistTracks.map((t) => parseTrack(t))
 		}
 	}
 
 	// Track
 
-	async #getTrackData(id: number): Promise<DeezerTrack> {
-		return (
-			await this.#apiCall('deezer.pageTrack', {
-				sng_id: id
-			})
-		).DATA
+	async #getTrackPage(id: number): Promise<APIMethod['deezer.pageTrack']> {
+		return await this.#apiCall('deezer.pageTrack', {
+			sng_id: id
+		})
 	}
 
 	async #getStream(track: DeezerTrack): Promise<GetStreamResponse> {
@@ -531,12 +531,12 @@ export default class Deezer implements StreamerWithLogin {
 				}
 			}
 			case 'track': {
-				const track = await this.#getTrackData(id)
+				const trackPage = await this.#getTrackPage(id)
 				return {
 					type: 'track',
-					metadata: parseTrack(track),
+					metadata: parseTrack(trackPage.DATA, trackPage.LYRICS),
 					getStream: () => {
-						return this.#getStream(track)
+						return this.#getStream(trackPage.DATA)
 					}
 				}
 			}
