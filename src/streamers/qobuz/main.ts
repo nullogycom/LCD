@@ -329,7 +329,9 @@ export default class Qobuz implements StreamerWithLogin {
 
 		return {
 			valid: true,
-			premium: loginResponse.user.credential.parameters.hires_streaming,
+			premium:
+				loginResponse.user?.credential?.parameters?.hires_streaming ||
+				loginResponse.user.credential.label.toLowerCase().includes('subscriber'),
 			country: loginResponse.user.country,
 			explicit: true
 		}
