@@ -278,20 +278,23 @@ export default class Soundcloud implements Streamer {
 		return { ...api, id }
 	}
 	async getAccountInfo(): Promise<StreamerAccount> {
+		if (!this.oauthToken) return { valid: false }
+
 		const client = this.client || (await this.#getClient())
-		const subscriptionQuery = <SoundCloudSubscriptionData>await (
-			await fetch(
-				this.#formatURL(
-					`https://api-v2.soundcloud.com/payments/quotations/consumer-subscription`,
-					client
-				),
-				{
-					method: 'get',
-					headers: headers(this.oauthToken),
-					dispatcher: this.dispatcher
-				}
-			)
-		).json()
+		const response = await fetch(
+			this.#formatURL(
+				`https://api-v2.soundcloud.com/payments/quotations/consumer-subscription`,
+				client
+			),
+			{
+				method: 'get',
+				headers: headers(this.oauthToken),
+				dispatcher: this.dispatcher
+			}
+		)
+		if (response.status != 200) return { valid: false }
+
+		const subscriptionQuery = <SoundCloudSubscriptionData>await response.json()
 
 		return {
 			valid: true,
